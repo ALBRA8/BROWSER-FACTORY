@@ -1,0 +1,11 @@
+# Sesiones y cookies privadas de Chrome
+data/sesiones/
+
+# Proxies con credenciales privadas
+data/proxies.json
+
+# Dependencias y logs
+node_modules/
+*.log
+.DS_Store
+Thumbs.db

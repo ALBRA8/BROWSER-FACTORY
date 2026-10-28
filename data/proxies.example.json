@@ -1,0 +1,14 @@
+[
+  {
+    "id": "proxy-ejemplo",
+    "nombre": "Mi Proxy USA",
+    "raw": "http://149.18.33.131:12323:usuario:clave:MiProxyUSA",
+    "protocolo": "http",
+    "host": "149.18.33.131",
+    "port": "12323",
+    "user": "usuario",
+    "pass": "clave",
+    "ubicacion": "New York, USA (America/New_York)",
+    "creado": "2026-10-16T08:00:00.000Z"
+  }
+]

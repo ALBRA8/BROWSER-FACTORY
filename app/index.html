@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Browser Factory · Centro de Mando Multicanal</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="app-layout">
+    <!-- Barra Superior -->
+    <header class="topbar">
+      <div class="logo-area">
+        <div class="logo-badge">BF</div>
+        <div>
+          <h1>Browser Factory</h1>
+          <p class="subtitle">Gestor Multicanal & Despachador de Videos (Todo-en-Uno)</p>
+        </div>
+      </div>
+
+      <div class="header-stats">
+        <div class="stat-pill">
+          <span class="stat-label">Canales:</span>
+          <span class="stat-val" id="stat-total">0</span>
+        </div>
+        <div class="stat-pill">
+          <span class="stat-label">Videos pendientes:</span>
+          <span class="stat-val warning" id="stat-pending">0</span>
+        </div>
+        <div class="stat-pill">
+          <span class="stat-label">Proxies guardados:</span>
+          <span class="stat-val" id="stat-proxies">0</span>
+        </div>
+        <div class="stat-pill">
+          <span class="stat-label">Motor:</span>
+          <span class="stat-val online" id="stat-chrome">Chrome OK</span>
+        </div>
+      </div>
+
+      <div class="header-actions">
+        <button class="btn btn-secondary" id="btn-gestionar-proxies">
+          🛡️ Proxies Guardados
+        </button>
+        <button class="btn btn-primary" id="btn-nuevo-perfil">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+          Nuevo Canal
+        </button>
+        <button class="btn btn-danger" id="btn-shutdown" title="Apagar el software y liberar recursos del PC">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path><line x1="12" y1="2" x2="12" y2="12"></line></svg>
+          Apagar
+        </button>
+      </div>
+    </header>
+
+    <!-- Controles de filtrado y búsqueda -->
+    <section class="controls-bar">
+      <div class="search-box">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+        <input type="text" id="input-search" placeholder="Buscar canal, etiqueta o video...">
+      </div>
+
+      <div class="filter-tabs">
+        <button class="tab-btn active" data-filter="all">Todos los Canales</button>
+        <button class="tab-btn" data-filter="pending">Con Video Pendiente</button>
+      </div>
+    </section>
+
+    <!-- Contenedor Principal de Canales -->
+    <main class="main-content">
+      <div class="table-container">
+        <table class="profiles-table">
+          <thead>
+            <tr>
+              <th style="width: 220px;">Canal / Marca</th>
+              <th>Ecosistema & Lanzadores Rápidos (1 Clic)</th>
+              <th style="width: 270px;">Video Asignado a Subir</th>
+              <th style="width: 170px;">Proxy Asignado</th>
+              <th class="text-right" style="width: 110px;">Acciones</th>
+            </tr>
+          </thead>
+          <tbody id="profiles-body">
+            <!-- Filas dinámicas -->
+          </tbody>
+        </table>
+      </div>
+
+      <div id="empty-state" class="empty-state hidden">
+        <div class="empty-icon">📁</div>
+        <h3>No se encontraron canales</h3>
+        <p>Crea tu primer canal haciendo clic en "+ Nuevo Canal" arriba a la derecha.</p>
+      </div>
+    </main>
+
+    <!-- Modal Nuevo / Editar Canal -->
+    <div id="modal-profile" class="modal-backdrop hidden">
+      <div class="modal-card">
+        <div class="modal-header">
+          <h2 id="modal-title">Nuevo Canal / Marca</h2>
+          <button class="btn-close" id="btn-close-modal">✕</button>
+        </div>
+
+        <form id="form-profile">
+          <input type="hidden" id="profile-id">
+
+          <div class="form-group">
+            <label for="profile-name">Nombre del Canal / Marca</label>
+            <input type="text" id="profile-name" required placeholder="Ej: @CuriosidadesDelMundo o @Psicolimite">
+            <span class="help-text">Cada canal gestiona automáticamente su TikTok, YouTube, Instagram y versión Celular bajo la misma sesión.</span>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="profile-tags">Etiquetas / Nicho</label>
+              <input type="text" id="profile-tags" placeholder="Ej: Misterio, Viral, Curiosidades">
+            </div>
+
+            <div class="form-group">
+              <label for="profile-video">Video Pendiente (Opcional)</label>
+              <input type="text" id="profile-video" placeholder="Ej: video_024_espacio.mp4">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="profile-proxy-select">Proxy Guardado</label>
+            <select id="profile-proxy-select">
+              <option value="">Directo (Sin proxy)</option>
+              <!-- Opciones dinámicas de proxies -->
+            </select>
+            <span class="help-text">El proxy seleccionado se aplicará a todas las redes y sesiones de este canal.</span>
+          </div>
+
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" id="btn-cancel-modal">Cancelar</button>
+            <button type="submit" class="btn btn-primary">Guardar Canal</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Modal Gestionar Proxies Guardados -->
+    <div id="modal-proxies" class="modal-backdrop hidden">
+      <div class="modal-card" style="max-width: 620px;">
+        <div class="modal-header">
+          <h2>🛡️ Proxies Guardados (Saved Proxies)</h2>
+          <button class="btn-close" id="btn-close-proxies">✕</button>
+        </div>
+
+        <div class="modal-body">
+          <form id="form-new-proxy" style="background:#111317; padding:14px; border-radius:8px; border:1px solid var(--border-color); margin-bottom:18px;">
+            <label style="font-weight:600; margin-bottom:6px;">Agregar Nuevo Proxy</label>
+            <input type="text" id="input-raw-proxy" required placeholder="Pega el formato: http://ip:port:user:pass:nombre" style="margin-bottom:8px;">
+            <div style="display:flex; gap:10px;">
+              <input type="text" id="input-proxy-location" placeholder="Ubicación (Ej: New York, USA)" style="flex:1;">
+              <button type="submit" class="btn btn-primary" style="white-space:nowrap;">+ Guardar Proxy</button>
+            </div>
+            <span class="help-text">Acepta el formato que copiaste de Dolphin Anty directamente.</span>
+          </form>
+
+          <label style="font-size:12px; text-transform:uppercase; color:var(--text-muted); font-weight:600;">Lista de Proxies Disponibles:</label>
+          <div id="proxies-list" style="margin-top:8px; max-height:220px; overflow-y:auto; border:1px solid var(--border-color); border-radius:8px; background:#111317;">
+            <!-- Proxies dinámicos -->
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" id="btn-dismiss-proxies">Cerrar</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal Historial de Videos Publicados -->
+    <div id="modal-history" class="modal-backdrop hidden">
+      <div class="modal-card">
+        <div class="modal-header">
+          <h2 id="history-title">Historial de Videos Publicados</h2>
+          <button class="btn-close" id="btn-close-history">✕</button>
+        </div>
+        <div class="modal-body">
+          <p class="history-sub" id="history-profile-name"></p>
+          <div class="history-list" id="history-items"></div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" id="btn-dismiss-history">Cerrar</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Notificación Toast -->
+    <div id="toast" class="toast hidden"></div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
