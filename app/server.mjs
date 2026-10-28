@@ -19,29 +19,10 @@ const PROXIES_FILE = path.join(DATA_DIR, "proxies.json");
 if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
 if (!fs.existsSync(SESIONES_DIR)) fs.mkdirSync(SESIONES_DIR, { recursive: true });
 
-// Pre-configurar catálogo de proxies con ALBRA
+// Inicializar el catálogo vacío: las credenciales de proxy nunca deben quedar
+// codificadas en el repositorio. Cada instalación agrega sus proxies localmente.
 if (!fs.existsSync(PROXIES_FILE)) {
-  fs.writeFileSync(
-    PROXIES_FILE,
-    JSON.stringify(
-      [
-        {
-          id: "proxy-albra",
-          nombre: "ALBRA",
-          raw: "http://149.18.33.131:12323:14a8c595f1d40:b898347aff:ALBRA",
-          protocolo: "http",
-          host: "149.18.33.131",
-          port: "12323",
-          user: "14a8c595f1d40",
-          pass: "b898347aff",
-          ubicacion: "New York, USA (America/New_York)",
-          creado: new Date().toISOString(),
-        },
-      ],
-      null,
-      2,
-    ),
-  );
+  fs.writeFileSync(PROXIES_FILE, JSON.stringify([], null, 2), "utf8");
 }
 
 // Pre-configurar perfiles
@@ -55,7 +36,7 @@ if (!fs.existsSync(PROFILES_FILE)) {
           nombre: "Canal Curiosidades",
           plataforma: "tiktok",
           etiquetas: ["Curiosidades", "Viral"],
-          proxyId: "proxy-albra",
+          proxyId: "",
           videoPendiente: "curiosidades_espacio_01.mp4",
           historial: [],
           creado: new Date().toISOString(),
