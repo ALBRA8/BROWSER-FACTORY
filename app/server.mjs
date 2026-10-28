@@ -19,29 +19,10 @@ const PROXIES_FILE = path.join(DATA_DIR, "proxies.json");
 if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
 if (!fs.existsSync(SESIONES_DIR)) fs.mkdirSync(SESIONES_DIR, { recursive: true });
 
-// Pre-configurar catálogo de proxies con ALBRA
+// Inicializar el catálogo vacío: las credenciales de proxy nunca deben quedar
+// codificadas en el repositorio. Cada instalación agrega sus proxies localmente.
 if (!fs.existsSync(PROXIES_FILE)) {
-  fs.writeFileSync(
-    PROXIES_FILE,
-    JSON.stringify(
-      [
-        {
-          id: "proxy-albra",
-          nombre: "ALBRA",
-          raw: "http://149.18.33.131:12323:14a8c595f1d40:b898347aff:ALBRA",
-          protocolo: "http",
-          host: "149.18.33.131",
-          port: "12323",
-          user: "14a8c595f1d40",
-          pass: "b898347aff",
-          ubicacion: "New York, USA (America/New_York)",
-          creado: new Date().toISOString(),
-        },
-      ],
-      null,
-      2,
-    ),
-  );
+  fs.writeFileSync(PROXIES_FILE, JSON.stringify([], null, 2), "utf8");
 }
 
 // Pre-configurar perfiles
@@ -55,7 +36,7 @@ if (!fs.existsSync(PROFILES_FILE)) {
           nombre: "Canal Curiosidades",
           plataforma: "tiktok",
           etiquetas: ["Curiosidades", "Viral"],
-          proxyId: "proxy-albra",
+          proxyId: "",
           videoPendiente: "curiosidades_espacio_01.mp4",
           historial: [],
           creado: new Date().toISOString(),
@@ -102,6 +83,11 @@ function findChrome() {
 }
 
 const CHROME_PATH = findChrome();
+
+// Los IDs se usan como nombres de directorio: rechazar separadores y rutas.
+function isSafeProfileId(id) {
+  return typeof id === "string" && /^[a-zA-Z0-9_-]{1,80}$/.test(id);
+}
 
 function getProfiles() {
   try {
@@ -201,9 +187,9 @@ function setupProxyExtension(profileDir, proxyConfig) {
       mode: "fixed_servers",
       rules: {
         singleProxy: {
-          scheme: "${proxyConfig.protocolo || 'http'}",
-          host: "${proxyConfig.host}",
-          port: parseInt(${proxyConfig.port})
+          scheme: ${JSON.stringify(proxyConfig.protocolo || "http")},
+          host: ${JSON.stringify(proxyConfig.host)},
+          port: Number(${JSON.stringify(proxyConfig.port)})
         },
         bypassList: ["localhost", "127.0.0.1"]
       }
@@ -215,8 +201,8 @@ function setupProxyExtension(profileDir, proxyConfig) {
       function(details) {
         return {
           authCredentials: {
-            username: "${proxyConfig.user || ''}",
-            password: "${proxyConfig.pass || ''}"
+            username: ${JSON.stringify(proxyConfig.user || "")},
+            password: ${JSON.stringify(proxyConfig.pass || "")}
           }
         };
       },
@@ -241,13 +227,18 @@ const MIME_TYPES = {
 };
 
 const server = http.createServer((req, res) => {
-  res.setHeader("Access-Control-Allow-Origin", "*");
-  res.setHeader("Access-Control-Allow-Methods", "GET, POST, DELETE, OPTIONS");
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+  // La API solo debe aceptar peticiones iniciadas desde la propia interfaz local.
+  // No se habilita CORS: una web externa no debe poder operar sobre el servicio local.
+  const origin = req.headers.origin;
+  if (origin && origin !== `http://127.0.0.1:${PORT}` && origin !== `http://localhost:${PORT}`) {
+    res.writeHead(403, { "Content-Type": "application/json" });
+    res.end(JSON.stringify({ error: "Origen no permitido" }));
+    return;
+  }
 
   if (req.method === "OPTIONS") {
-    res.writeHead(204);
-    res.end();
+    res.writeHead(403, { "Content-Type": "application/json" });
+    res.end(JSON.stringify({ error: "Preflight no permitido" }));
     return;
   }
 
@@ -281,8 +272,14 @@ const server = http.createServer((req, res) => {
 
   // PROXIES API
   if (pathname === "/api/proxies" && req.method === "GET") {
+    // Nunca devolver contraseñas ni cadenas de conexión completas al navegador.
+    const safeProxies = getProxies().map(({ pass, raw, ...proxy }) => ({
+      ...proxy,
+      user: proxy.user ? "••••••" : "",
+      tieneCredenciales: Boolean(pass),
+    }));
     res.writeHead(200, { "Content-Type": "application/json" });
-    res.end(JSON.stringify(getProxies()));
+    res.end(JSON.stringify(safeProxies));
     return;
   }
 
@@ -317,8 +314,9 @@ const server = http.createServer((req, res) => {
         }
 
         saveProxies(proxies);
+        const { pass, raw, ...safeProxy } = proxyRecord;
         res.writeHead(200, { "Content-Type": "application/json" });
-        res.end(JSON.stringify({ ok: true, proxy: proxyRecord }));
+        res.end(JSON.stringify({ ok: true, proxy: { ...safeProxy, user: safeProxy.user ? "••••••" : "", tieneCredenciales: Boolean(pass) } }));
       } catch (err) {
         res.writeHead(400, { "Content-Type": "application/json" });
         res.end(JSON.stringify({ error: err.message }));
@@ -351,6 +349,11 @@ const server = http.createServer((req, res) => {
         const data = JSON.parse(body);
         const profiles = getProfiles();
         const id = data.id || `perfil-${Date.now()}`;
+        if (!isSafeProfileId(id)) {
+          res.writeHead(400, { "Content-Type": "application/json" });
+          res.end(JSON.stringify({ error: "ID de perfil inválido" }));
+          return;
+        }
         const existingIndex = profiles.findIndex((p) => p.id === id);
 
         const profileData = {
@@ -444,6 +447,11 @@ const server = http.createServer((req, res) => {
   // LANZAR NAVEGADOR AISLADO CON PROXY
   if (pathname.endsWith("/launch") && req.method === "POST") {
     const id = pathname.split("/")[3];
+    if (!isSafeProfileId(id)) {
+      res.writeHead(400, { "Content-Type": "application/json" });
+      res.end(JSON.stringify({ error: "ID de perfil inválido" }));
+      return;
+    }
     const profiles = getProfiles();
     const profile = profiles.find((p) => p.id === id);
 
