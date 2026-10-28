@@ -262,8 +262,14 @@ const server = http.createServer((req, res) => {
 
   // PROXIES API
   if (pathname === "/api/proxies" && req.method === "GET") {
+    // Nunca devolver contraseñas ni cadenas de conexión completas al navegador.
+    const safeProxies = getProxies().map(({ pass, raw, ...proxy }) => ({
+      ...proxy,
+      user: proxy.user ? "••••••" : "",
+      tieneCredenciales: Boolean(pass),
+    }));
     res.writeHead(200, { "Content-Type": "application/json" });
-    res.end(JSON.stringify(getProxies()));
+    res.end(JSON.stringify(safeProxies));
     return;
   }
 
@@ -298,8 +304,9 @@ const server = http.createServer((req, res) => {
         }
 
         saveProxies(proxies);
+        const { pass, raw, ...safeProxy } = proxyRecord;
         res.writeHead(200, { "Content-Type": "application/json" });
-        res.end(JSON.stringify({ ok: true, proxy: proxyRecord }));
+        res.end(JSON.stringify({ ok: true, proxy: { ...safeProxy, user: safeProxy.user ? "••••••" : "", tieneCredenciales: Boolean(pass) } }));
       } catch (err) {
         res.writeHead(400, { "Content-Type": "application/json" });
         res.end(JSON.stringify({ error: err.message }));
