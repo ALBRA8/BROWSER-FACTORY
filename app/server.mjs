@@ -222,13 +222,18 @@ const MIME_TYPES = {
 };
 
 const server = http.createServer((req, res) => {
-  res.setHeader("Access-Control-Allow-Origin", "*");
-  res.setHeader("Access-Control-Allow-Methods", "GET, POST, DELETE, OPTIONS");
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+  // La API solo debe aceptar peticiones iniciadas desde la propia interfaz local.
+  // No se habilita CORS: una web externa no debe poder operar sobre el servicio local.
+  const origin = req.headers.origin;
+  if (origin && origin !== `http://127.0.0.1:${PORT}` && origin !== `http://localhost:${PORT}`) {
+    res.writeHead(403, { "Content-Type": "application/json" });
+    res.end(JSON.stringify({ error: "Origen no permitido" }));
+    return;
+  }
 
   if (req.method === "OPTIONS") {
-    res.writeHead(204);
-    res.end();
+    res.writeHead(403, { "Content-Type": "application/json" });
+    res.end(JSON.stringify({ error: "Preflight no permitido" }));
     return;
   }
 
