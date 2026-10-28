@@ -84,6 +84,11 @@ function findChrome() {
 
 const CHROME_PATH = findChrome();
 
+// Los IDs se usan como nombres de directorio: rechazar separadores y rutas.
+function isSafeProfileId(id) {
+  return typeof id === "string" && /^[a-zA-Z0-9_-]{1,80}$/.test(id);
+}
+
 function getProfiles() {
   try {
     return JSON.parse(fs.readFileSync(PROFILES_FILE, "utf8"));
@@ -182,9 +187,9 @@ function setupProxyExtension(profileDir, proxyConfig) {
       mode: "fixed_servers",
       rules: {
         singleProxy: {
-          scheme: "${proxyConfig.protocolo || 'http'}",
-          host: "${proxyConfig.host}",
-          port: parseInt(${proxyConfig.port})
+          scheme: ${JSON.stringify(proxyConfig.protocolo || "http")},
+          host: ${JSON.stringify(proxyConfig.host)},
+          port: Number(${JSON.stringify(proxyConfig.port)})
         },
         bypassList: ["localhost", "127.0.0.1"]
       }
@@ -196,8 +201,8 @@ function setupProxyExtension(profileDir, proxyConfig) {
       function(details) {
         return {
           authCredentials: {
-            username: "${proxyConfig.user || ''}",
-            password: "${proxyConfig.pass || ''}"
+            username: ${JSON.stringify(proxyConfig.user || "")},
+            password: ${JSON.stringify(proxyConfig.pass || "")}
           }
         };
       },
@@ -344,6 +349,11 @@ const server = http.createServer((req, res) => {
         const data = JSON.parse(body);
         const profiles = getProfiles();
         const id = data.id || `perfil-${Date.now()}`;
+        if (!isSafeProfileId(id)) {
+          res.writeHead(400, { "Content-Type": "application/json" });
+          res.end(JSON.stringify({ error: "ID de perfil inválido" }));
+          return;
+        }
         const existingIndex = profiles.findIndex((p) => p.id === id);
 
         const profileData = {
@@ -437,6 +447,11 @@ const server = http.createServer((req, res) => {
   // LANZAR NAVEGADOR AISLADO CON PROXY
   if (pathname.endsWith("/launch") && req.method === "POST") {
     const id = pathname.split("/")[3];
+    if (!isSafeProfileId(id)) {
+      res.writeHead(400, { "Content-Type": "application/json" });
+      res.end(JSON.stringify({ error: "ID de perfil inválido" }));
+      return;
+    }
     const profiles = getProfiles();
     const profile = profiles.find((p) => p.id === id);
 
