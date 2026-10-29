@@ -24,6 +24,31 @@ const CONFIG_FILE = path.join(DATA_DIR, "config.json");
 // Tamaño máximo permitido para el cuerpo de peticiones (protección contra abuso local)
 const MAX_BODY_BYTES = 1024 * 1024; // 1 MB
 
+// Orígenes adicionales permitidos (modo despliegue/preview detrás de un proxy).
+// Lista separada por comas; un patrón que termina en "*" acepta cualquier origen
+// que empiece con ese prefijo. Por defecto (vacío) solo se permiten orígenes locales.
+const ORIGENES_EXTRA = (process.env.ORIGENES_EXTRA || "")
+  .split(",")
+  .map((s) => s.trim())
+  .filter(Boolean);
+
+function origenPermitido(origin) {
+  if (origin === `http://127.0.0.1:${PORT}` || origin === `http://localhost:${PORT}`) return true;
+  return ORIGENES_EXTRA.some((pat) => {
+    if (!pat.includes("*")) return origin === pat;
+    // Comodines tipo glob ("https://*.space-z.ai") convertidos a regex segura
+    const rx = new RegExp(
+      "^" +
+        pat
+          .split("*")
+          .map((s) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"))
+          .join(".*") +
+        "$"
+    );
+    return rx.test(origin);
+  });
+}
+
 // Redes sociales soportadas por canal
 const REDES = ["tiktok", "youtube", "instagram", "x", "telegram"];
 
@@ -528,7 +553,7 @@ const server = http.createServer(async (req, res) => {
   // La API solo debe aceptar peticiones iniciadas desde la propia interfaz local.
   // No se habilita CORS: una web externa no debe poder operar sobre el servicio local.
   const origin = req.headers.origin;
-  if (origin && origin !== `http://127.0.0.1:${PORT}` && origin !== `http://localhost:${PORT}`) {
+  if (origin && !origenPermitido(origin)) {
     sendJson(res, 403, { error: "Origen no permitido" });
     return;
   }
