@@ -16,7 +16,7 @@
       <div class="logo-area">
         <div class="logo-badge">BF</div>
         <div>
-          <h1>Browser Factory</h1>
+          <h1>Browser Factory <span class="version-badge">v1.0</span></h1>
           <p class="subtitle">Gestor Multicanal & Despachador de Videos (Todo-en-Uno)</p>
         </div>
       </div>
@@ -25,6 +25,10 @@
         <div class="stat-pill">
           <span class="stat-label">Canales:</span>
           <span class="stat-val" id="stat-total">0</span>
+        </div>
+        <div class="stat-pill">
+          <span class="stat-label">Activos:</span>
+          <span class="stat-val online" id="stat-activos">0</span>
         </div>
         <div class="stat-pill">
           <span class="stat-label">Videos pendientes:</span>
@@ -36,7 +40,7 @@
         </div>
         <div class="stat-pill">
           <span class="stat-label">Motor:</span>
-          <span class="stat-val online" id="stat-chrome">Chrome OK</span>
+          <span class="stat-val online" id="stat-chrome">Detectando…</span>
         </div>
       </div>
 
@@ -65,6 +69,11 @@
       <div class="filter-tabs">
         <button class="tab-btn active" data-filter="all">Todos los Canales</button>
         <button class="tab-btn" data-filter="pending">Con Video Pendiente</button>
+        <button class="tab-btn" data-filter="tiktok">🎵 TikTok</button>
+        <button class="tab-btn" data-filter="youtube">🔴 YouTube</button>
+        <button class="tab-btn" data-filter="instagram">📸 Instagram</button>
+        <button class="tab-btn" data-filter="x">𝕏 X</button>
+        <button class="tab-btn" data-filter="telegram">✈️ Telegram</button>
       </div>
     </section>
 
@@ -74,11 +83,11 @@
         <table class="profiles-table">
           <thead>
             <tr>
-              <th style="width: 220px;">Canal / Marca</th>
+              <th style="width: 230px;">Canal / Marca</th>
               <th>Ecosistema & Lanzadores Rápidos (1 Clic)</th>
-              <th style="width: 270px;">Video Asignado a Subir</th>
+              <th style="width: 290px;">Video Asignado a Subir</th>
               <th style="width: 170px;">Proxy Asignado</th>
-              <th class="text-right" style="width: 110px;">Acciones</th>
+              <th class="text-right" style="width: 120px;">Acciones</th>
             </tr>
           </thead>
           <tbody id="profiles-body">
@@ -108,7 +117,19 @@
           <div class="form-group">
             <label for="profile-name">Nombre del Canal / Marca</label>
             <input type="text" id="profile-name" required placeholder="Ej: @CuriosidadesDelMundo o @Psicolimite">
-            <span class="help-text">Cada canal gestiona automáticamente su TikTok, YouTube, Instagram y versión Celular bajo la misma sesión.</span>
+            <span class="help-text">Cada canal mantiene sesiones aisladas por red social, según las redes que actives abajo.</span>
+          </div>
+
+          <div class="form-group">
+            <label>Redes Sociales del Canal</label>
+            <div class="redes-checks">
+              <label class="check-chip"><input type="checkbox" id="red-tiktok" checked> 🎵 TikTok</label>
+              <label class="check-chip"><input type="checkbox" id="red-youtube" checked> 🔴 YouTube</label>
+              <label class="check-chip"><input type="checkbox" id="red-instagram" checked> 📸 Instagram</label>
+              <label class="check-chip"><input type="checkbox" id="red-x" checked> 𝕏 X (Twitter)</label>
+              <label class="check-chip"><input type="checkbox" id="red-telegram" checked> ✈️ Telegram</label>
+            </div>
+            <span class="help-text">Desactiva las redes que este canal no usa: desaparecerán sus botones y no se abrirán con "Abrir Todo".</span>
           </div>
 
           <div class="form-row">
@@ -137,6 +158,48 @@
             <button type="submit" class="btn btn-primary">Guardar Canal</button>
           </div>
         </form>
+      </div>
+    </div>
+
+    <!-- Modal Selector de Video -->
+    <div id="modal-video" class="modal-backdrop hidden">
+      <div class="modal-card modal-video-card">
+        <div class="modal-header">
+          <h2 id="video-modal-title">🎬 Asignar Video</h2>
+          <button class="btn-close" id="btn-close-video">✕</button>
+        </div>
+
+        <div class="modal-body">
+          <!-- Barra de carpeta configurada -->
+          <div class="folder-bar">
+            <div class="folder-info">
+              <span class="folder-label">Carpeta de videos:</span>
+              <span class="folder-path" id="video-folder-path">Sin configurar</span>
+            </div>
+            <div class="folder-actions">
+              <button class="btn btn-secondary btn-sm" id="btn-elegir-carpeta" title="Abrir el explorador de Windows para elegir la carpeta">📂 Elegir carpeta</button>
+              <button class="btn btn-secondary btn-sm" id="btn-escanear" title="Volver a escanear la carpeta">🔄 Escanear</button>
+            </div>
+          </div>
+
+          <div class="video-toolbar">
+            <div class="search-box search-box-sm">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+              <input type="text" id="input-video-search" placeholder="Filtrar videos por nombre...">
+            </div>
+            <button class="btn btn-secondary btn-sm" id="btn-examinar-archivo" title="Abrir el explorador de Windows para elegir un archivo">🗂️ Examinar archivo…</button>
+          </div>
+
+          <div class="video-grid" id="video-grid">
+            <div class="video-grid-placeholder">Configura tu carpeta de videos y pulsa «Escanear».</div>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <div class="selected-file" id="selected-file-label"></div>
+          <button type="button" class="btn btn-secondary" id="btn-cancel-video">Cancelar</button>
+          <button type="button" class="btn btn-primary" id="btn-confirm-video" disabled>Asignar Video</button>
+        </div>
       </div>
     </div>
 

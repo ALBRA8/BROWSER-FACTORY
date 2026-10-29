@@ -1,13 +1,22 @@
-// Lógica del cliente de Browser Factory (Gestor Multicanal Todo-en-Uno)
+// Lógica del cliente de Browser Factory v1.0
+// Gestor Multicanal Todo-en-Uno: TikTok, YouTube, Instagram, X y Telegram.
 
 let allProfiles = [];
 let allProxies = [];
+let systemInfo = {};
 let currentFilter = "all";
 let searchQuery = "";
+
+// Estado del selector de videos
+let videoTargetId = null;
+let videoItems = [];
+let videoSearch = "";
+let selectedVideoPath = "";
 
 const profilesBody = document.getElementById("profiles-body");
 const emptyState = document.getElementById("empty-state");
 const statTotal = document.getElementById("stat-total");
+const statActivos = document.getElementById("stat-activos");
 const statPending = document.getElementById("stat-pending");
 const statProxies = document.getElementById("stat-proxies");
 const statChrome = document.getElementById("stat-chrome");
@@ -21,6 +30,22 @@ const profileNameInput = document.getElementById("profile-name");
 const profileTagsInput = document.getElementById("profile-tags");
 const profileVideoInput = document.getElementById("profile-video");
 const profileProxySelect = document.getElementById("profile-proxy-select");
+const redChecks = {
+  tiktok: document.getElementById("red-tiktok"),
+  youtube: document.getElementById("red-youtube"),
+  instagram: document.getElementById("red-instagram"),
+  x: document.getElementById("red-x"),
+  telegram: document.getElementById("red-telegram"),
+};
+
+// Modal Selector de Video
+const modalVideo = document.getElementById("modal-video");
+const videoModalTitle = document.getElementById("video-modal-title");
+const videoFolderPath = document.getElementById("video-folder-path");
+const videoGrid = document.getElementById("video-grid");
+const inputVideoSearch = document.getElementById("input-video-search");
+const selectedFileLabel = document.getElementById("selected-file-label");
+const btnConfirmVideo = document.getElementById("btn-confirm-video");
 
 // Modales Proxies
 const modalProxies = document.getElementById("modal-proxies");
@@ -42,27 +67,57 @@ const inputSearch = document.getElementById("input-search");
 const tabButtons = document.querySelectorAll(".tab-btn");
 const toastEl = document.getElementById("toast");
 
+const NETWORK_META = {
+  tiktok: { icon: "🎵", label: "TikTok", urlTitle: "Abrir TikTok Studio para subir video en este canal" },
+  youtube: { icon: "🔴", label: "YouTube", urlTitle: "Abrir YouTube Studio para subir Short/Video" },
+  instagram: { icon: "📸", label: "Instagram", urlTitle: "Abrir Instagram para subir Reel/Post" },
+  x: { icon: "𝕏", label: "X", urlTitle: "Abrir X (Twitter) con el compositor de post" },
+  telegram: { icon: "✈️", label: "Telegram", urlTitle: "Abrir Telegram Web para publicar en canales" },
+};
+
 async function init() {
-  await checkSystem();
+  setupEvents();
+  await refreshSystem();
   await loadProxies();
   await loadProfiles();
-  setupEvents();
+  await loadConfig();
+  // Vigilar sesiones activas y estado del motor cada 6 segundos
+  setInterval(async () => {
+    await refreshSystem();
+  }, 6000);
 }
 
-async function checkSystem() {
+async function refreshSystem() {
   try {
     const res = await fetch("/api/system");
-    const data = await res.json();
-    if (data.chromeAvailable) {
-      statChrome.textContent = "Chrome OK";
-      statChrome.className = "stat-val online";
-    } else {
-      statChrome.textContent = "Chrome no hallado";
-      statChrome.className = "stat-val warning";
+    systemInfo = await res.json();
+    if (statChrome) {
+      if (systemInfo.chromeAvailable) {
+        statChrome.textContent = systemInfo.engine || "Chrome OK";
+        statChrome.className = "stat-val online";
+      } else {
+        statChrome.textContent = "Motor no hallado";
+        statChrome.className = "stat-val warning";
+      }
     }
-    statProxies.textContent = data.proxiesCount || 0;
+    statProxies.textContent = systemInfo.proxiesCount || 0;
+    statActivos.textContent = (systemInfo.activos || []).length;
+    render();
   } catch (err) {
-    statChrome.textContent = "Modo Local";
+    if (statChrome) statChrome.textContent = "Modo Local";
+  }
+}
+
+async function loadConfig() {
+  try {
+    const res = await fetch("/api/config");
+    const config = await res.json();
+    if (config.carpetaVideos) {
+      videoFolderPath.textContent = config.carpetaVideos;
+      await scanVideos();
+    }
+  } catch (err) {
+    console.error("Error cargando configuración:", err);
   }
 }
 
@@ -126,9 +181,20 @@ async function loadProfiles() {
   }
 }
 
+function profileRedes(p) {
+  const base = { tiktok: true, youtube: true, instagram: true, x: true, telegram: true };
+  return { ...base, ...(p.redes || {}) };
+}
+
 function render() {
+  const activos = systemInfo.activos || [];
+
   const filtered = allProfiles.filter((p) => {
+    const redes = profileRedes(p);
     if (currentFilter === "pending" && !p.videoPendiente) return false;
+    if (["tiktok", "youtube", "instagram", "x", "telegram"].includes(currentFilter)) {
+      if (!redes[currentFilter]) return false;
+    }
 
     if (searchQuery) {
       const q = searchQuery.toLowerCase();
@@ -152,21 +218,37 @@ function render() {
   emptyState.classList.add("hidden");
   profilesBody.innerHTML = filtered
     .map((p) => {
+      const redes = profileRedes(p);
+      const isActive = activos.includes(p.id);
+
       const tagsHtml = (p.etiquetas || [])
         .map((tag) => `<span class="tag-pill">${escapeHtml(tag)}</span>`)
         .join("");
 
+      // Miniatura del video asignado (solo si ffmpeg está disponible y hay ruta real)
+      let miniThumb = "";
+      if (p.videoPendiente && systemInfo.ffmpeg && (p.videoPendiente.includes("\\") || p.videoPendiente.includes("/"))) {
+        miniThumb = `<img class="mini-thumb" src="/api/thumb?src=${encodeURIComponent(p.videoPendiente)}" alt="" onerror="this.classList.add('thumb-missing')">`;
+      }
+
       const videoContent = p.videoPendiente
         ? `
           <div class="video-cell">
-            <span class="video-name" title="${escapeHtml(p.videoPendiente)}">🎬 ${escapeHtml(p.videoPendiente)}</span>
-            <button class="btn-publish" onclick="markPublished('${p.id}')" title="Marcar como subido para archivar en el historial">✓ Publicado</button>
+            ${miniThumb}
+            <div class="video-meta">
+              <span class="video-name" title="${escapeHtml(p.videoPendiente)}">🎬 ${escapeHtml(baseName(p.videoPendiente))}</span>
+              <span class="video-sub">${escapeHtml(shortPath(p.videoPendiente))}</span>
+            </div>
+            <div class="video-btns">
+              <button class="btn-publish dashed" onclick="openVideoModal('${p.id}')" title="Elegir otro video de tu carpeta">⟳</button>
+              <button class="btn-publish" onclick="markPublished('${p.id}')" title="Marcar como subido para archivar en el historial">✓ Publicado</button>
+            </div>
           </div>
         `
         : `
           <div class="video-cell">
             <span class="video-empty">Sin video asignado</span>
-            <button class="btn-publish" style="border-style:dashed;" onclick="promptAssignVideo('${p.id}')">+ Asignar</button>
+            <button class="btn-publish dashed wide" onclick="openVideoModal('${p.id}')" title="Elegir un video de tu carpeta">+ Asignar Video</button>
           </div>
         `;
 
@@ -181,28 +263,32 @@ function render() {
         `
         : `<span class="video-empty">Directo</span>`;
 
+      // Lanzadores según las redes activadas del canal
+      const launcherButtons = Object.entries(NETWORK_META)
+        .filter(([key]) => redes[key])
+        .map(([key, meta]) => `
+          <button class="btn-network ${key}" onclick="launchChannel('${p.id}', '${key}', this)" title="${meta.urlTitle}">
+            ${meta.icon} ${meta.label}
+          </button>
+        `)
+        .join("");
+
       return `
         <tr>
           <td>
-            <div class="account-cell" style="font-size:15px;">${escapeHtml(p.nombre)}</div>
+            <div class="account-cell" style="font-size:15px;">${escapeHtml(p.nombre)}
+              ${isActive ? `<span class="badge-activo" title="Este canal tiene un navegador abierto ahora"><span class="dot"></span>Activo</span>` : ""}
+            </div>
             <div style="margin-top:4px;">${tagsHtml || '<span class="video-empty">—</span>'}</div>
-            ${p.ultimoInicio ? `<div class="account-sub" style="margin-top:4px;">Último uso: ${new Date(p.ultimoInicio).toLocaleTimeString()}</div>` : ""}
+            ${p.ultimoInicio ? `<div class="account-sub" style="margin-top:4px;">Último uso: ${fmtFecha(p.ultimoInicio)}</div>` : ""}
           </td>
           <td>
             <div class="launcher-group">
-              <button class="btn-network tiktok" onclick="launchChannel('${p.id}', 'tiktok', this)" title="Abrir TikTok Studio para subir video en este canal">
-                🎵 TikTok
-              </button>
-              <button class="btn-network youtube" onclick="launchChannel('${p.id}', 'youtube', this)" title="Abrir YouTube Studio para subir Short/Video">
-                🔴 YouTube
-              </button>
-              <button class="btn-network instagram" onclick="launchChannel('${p.id}', 'instagram', this)" title="Abrir Instagram para subir Reel/Post">
-                📸 Instagram
-              </button>
+              ${launcherButtons}
               <button class="btn-network mobile" onclick="launchChannel('${p.id}', 'mobile', this)" title="Abrir en formato Celular (Smartphone vertical / Android) con huella táctil">
                 📱 Celular
               </button>
-              <button class="btn-network all" onclick="launchChannel('${p.id}', 'all', this)" title="Abrir las 3 redes juntas (TikTok + YouTube + Instagram) de este canal">
+              <button class="btn-network all" onclick="launchChannel('${p.id}', 'all', this)" title="Abrir todas las redes activadas de este canal a la vez">
                 🚀 Abrir Todo
               </button>
             </div>
@@ -211,6 +297,10 @@ function render() {
           <td>${proxyHtml}</td>
           <td>
             <div class="actions-cell">
+              ${isActive ? `
+              <button class="btn-icon stop" onclick="closeSessions('${p.id}')" title="Cerrar el navegador abierto de este canal">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="5" width="14" height="14" rx="2"></rect></svg>
+              </button>` : ""}
               <button class="btn-icon" onclick="viewHistory('${p.id}')" title="Ver historial de publicaciones de este canal">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
               </button>
@@ -227,6 +317,170 @@ function render() {
     })
     .join("");
 }
+
+/* ===================== SELECTOR DE VIDEOS ===================== */
+
+function baseName(ruta) {
+  return String(ruta || "").split(/[\\/]/).pop() || ruta;
+}
+
+function shortPath(ruta) {
+  const s = String(ruta || "");
+  if (s.length <= 42) return s;
+  return "…" + s.slice(-41);
+}
+
+function fmtBytes(n) {
+  if (!n) return "";
+  if (n < 1024) return `${n} B`;
+  if (n < 1024 * 1024) return `${(n / 1024).toFixed(0)} KB`;
+  if (n < 1024 * 1024 * 1024) return `${(n / (1024 * 1024)).toFixed(1)} MB`;
+  return `${(n / (1024 * 1024 * 1024)).toFixed(2)} GB`;
+}
+
+function fmtFecha(iso) {
+  const d = new Date(iso);
+  return `${d.toLocaleDateString()} ${d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`;
+}
+
+window.openVideoModal = function (id) {
+  const profile = allProfiles.find((p) => p.id === id);
+  if (!profile) return;
+
+  videoTargetId = id;
+  selectedVideoPath = profile.videoPendiente || "";
+  videoSearch = "";
+  inputVideoSearch.value = "";
+
+  videoModalTitle.textContent = `🎬 Asignar Video · ${profile.nombre}`;
+  updateSelectedLabel();
+
+  modalVideo.classList.remove("hidden");
+
+  if (systemInfo.carpetaVideos) {
+    videoFolderPath.textContent = systemInfo.carpetaVideos;
+    scanVideos();
+  } else {
+    videoFolderPath.textContent = "Sin configurar";
+    videoGrid.innerHTML = `<div class="video-grid-placeholder">Configura tu carpeta de videos arriba y pulsa «Escanear».</div>`;
+  }
+};
+
+function updateSelectedLabel() {
+  if (selectedVideoPath) {
+    selectedFileLabel.innerHTML = `<span class="selected-chip" title="${escapeHtml(selectedVideoPath)}">✅ ${escapeHtml(baseName(selectedVideoPath))}</span>`;
+    btnConfirmVideo.disabled = false;
+  } else {
+    selectedFileLabel.innerHTML = "";
+    btnConfirmVideo.disabled = true;
+  }
+}
+
+async function scanVideos() {
+  videoGrid.innerHTML = `<div class="video-grid-placeholder">🔄 Escaneando carpeta…</div>`;
+  try {
+    const res = await fetch("/api/videos");
+    const data = await res.json();
+    if (!data.ok) {
+      videoGrid.innerHTML = `<div class="video-grid-placeholder">⚠️ ${escapeHtml(data.error || "No se pudo escanear la carpeta")}</div>`;
+      return;
+    }
+    videoItems = data.items || [];
+    if (!systemInfo.ffmpeg) {
+      videoItems = videoItems.map((v) => ({ ...v, thumb: null }));
+    }
+    renderVideoGrid();
+    if (data.ffmpeg === false) {
+      showToast("ℹ️ ffmpeg no detectado: las miniaturas se muestran como marcador visual");
+    }
+  } catch (err) {
+    videoGrid.innerHTML = `<div class="video-grid-placeholder">Error escaneando: ${escapeHtml(err.message)}</div>`;
+  }
+}
+
+function renderVideoGrid() {
+  const q = videoSearch.toLowerCase();
+  const list = q
+    ? videoItems.filter((v) => v.nombre.toLowerCase().includes(q))
+    : videoItems;
+
+  if (list.length === 0) {
+    videoGrid.innerHTML = `<div class="video-grid-placeholder">${videoItems.length === 0 ? "No hay videos (.mp4, .mov, .mkv…) en la carpeta configurada." : "Ningún video coincide con el filtro."}</div>`;
+    return;
+  }
+
+  videoGrid.innerHTML = list
+    .map((v) => {
+      const isSelected = selectedVideoPath === v.ruta;
+      const thumbHtml = v.thumb
+        ? `<img class="video-thumb" loading="lazy" src="/api/thumb?src=${encodeURIComponent(v.ruta)}" alt="" onerror="this.outerHTML='<div class=\\'video-thumb placeholder\\'>🎬</div>'">`
+        : `<div class="video-thumb placeholder">🎬</div>`;
+
+      return `
+        <div class="video-card ${isSelected ? "selected" : ""}" data-ruta="${escapeHtml(v.ruta)}" onclick="pickVideoCard(this)" ondblclick="pickVideoCard(this); confirmAssignVideo()">
+          ${thumbHtml}
+          <div class="video-card-name" title="${escapeHtml(v.nombre)}">${escapeHtml(v.nombre)}</div>
+          <div class="video-card-meta">${fmtBytes(v.tamano)}${v.modificado ? ` · ${new Date(v.modificado).toLocaleDateString()}` : ""}</div>
+        </div>
+      `;
+    })
+    .join("");
+}
+
+window.pickVideoCard = function (cardEl) {
+  selectedVideoPath = cardEl.dataset.ruta || "";
+  videoGrid.querySelectorAll(".video-card").forEach((el) => el.classList.remove("selected"));
+  cardEl.classList.add("selected");
+  updateSelectedLabel();
+};
+
+async function nativeDialog(mode, buttonEl) {
+  const original = buttonEl.innerHTML;
+  buttonEl.disabled = true;
+  buttonEl.innerHTML = "⏳ Abriendo…";
+  try {
+    const res = await fetch("/api/file-dialog", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ mode }),
+    });
+    const data = await res.json();
+    if (data.ok && data.ruta) return data.ruta;
+    if (data.cancelado) return null;
+    showToast("⚠️ " + (data.error || "No se pudo abrir el diálogo de Windows"));
+    return null;
+  } catch (err) {
+    showToast("Error con el diálogo nativo: " + err.message);
+    return null;
+  } finally {
+    buttonEl.disabled = false;
+    buttonEl.innerHTML = original;
+  }
+}
+
+window.confirmAssignVideo = async function () {
+  if (!videoTargetId || !selectedVideoPath) return;
+
+  try {
+    const res = await fetch(`/api/profiles/${videoTargetId}/assign-video`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ video: selectedVideoPath }),
+    });
+    const data = await res.json();
+    if (data.ok) {
+      showToast("🎬 Video asignado correctamente");
+      modalVideo.classList.add("hidden");
+      await loadProfiles();
+    } else {
+      alert("Error al asignar: " + data.error);
+    }
+  } catch (err) {
+    alert("Error al asignar: " + err.message);
+  }
+};
+
+/* ===================== EVENTOS ===================== */
 
 function setupEvents() {
   inputSearch.addEventListener("input", (e) => {
@@ -250,6 +504,7 @@ function setupEvents() {
     profileNameInput.value = "";
     profileTagsInput.value = "";
     profileVideoInput.value = "";
+    Object.values(redChecks).forEach((chk) => (chk.checked = true));
     renderProxyDropdown();
     modalProfile.classList.remove("hidden");
     profileNameInput.focus();
@@ -257,6 +512,43 @@ function setupEvents() {
 
   document.getElementById("btn-close-modal").addEventListener("click", () => modalProfile.classList.add("hidden"));
   document.getElementById("btn-cancel-modal").addEventListener("click", () => modalProfile.classList.add("hidden"));
+
+  // Modal Selector de Video
+  document.getElementById("btn-close-video").addEventListener("click", () => modalVideo.classList.add("hidden"));
+  document.getElementById("btn-cancel-video").addEventListener("click", () => modalVideo.classList.add("hidden"));
+  document.getElementById("btn-escanear").addEventListener("click", scanVideos);
+  btnConfirmVideo.addEventListener("click", confirmAssignVideo);
+
+  inputVideoSearch.addEventListener("input", (e) => {
+    videoSearch = e.target.value.trim();
+    renderVideoGrid();
+  });
+
+  document.getElementById("btn-elegir-carpeta").addEventListener("click", async (e) => {
+    const ruta = await nativeDialog("folder", e.currentTarget);
+    if (!ruta) return;
+    try {
+      await fetch("/api/config", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ carpetaVideos: ruta }),
+      });
+      systemInfo.carpetaVideos = ruta;
+      videoFolderPath.textContent = ruta;
+      showToast("📂 Carpeta de videos configurada");
+      await scanVideos();
+    } catch (err) {
+      alert("Error guardando la carpeta: " + err.message);
+    }
+  });
+
+  document.getElementById("btn-examinar-archivo").addEventListener("click", async (e) => {
+    const ruta = await nativeDialog("file", e.currentTarget);
+    if (!ruta) return;
+    selectedVideoPath = ruta;
+    updateSelectedLabel();
+    renderVideoGrid();
+  });
 
   // Modal Proxies
   btnGestionarProxies.addEventListener("click", () => {
@@ -305,6 +597,13 @@ function setupEvents() {
       etiquetas: profileTagsInput.value,
       videoPendiente: profileVideoInput.value,
       proxyId: profileProxySelect.value,
+      redes: {
+        tiktok: redChecks.tiktok.checked,
+        youtube: redChecks.youtube.checked,
+        instagram: redChecks.instagram.checked,
+        x: redChecks.x.checked,
+        telegram: redChecks.telegram.checked,
+      },
     };
 
     try {
@@ -376,7 +675,7 @@ window.deleteProxy = async function (id) {
   }
 };
 
-// Lanzar red o celular para un canal
+// Lanzar red, celular o ecosistema completo para un canal
 window.launchChannel = async function (id, target, buttonEl) {
   const originalText = buttonEl.innerHTML;
   buttonEl.disabled = true;
@@ -395,13 +694,16 @@ window.launchChannel = async function (id, target, buttonEl) {
         tiktok: "TikTok",
         youtube: "YouTube Studio",
         instagram: "Instagram",
+        x: "X (Twitter)",
+        telegram: "Telegram Web",
         mobile: "📱 Celular Android (Smartphone)",
-        all: "Ecosistema Completo (TikTok + YT + IG)",
+        all: "Ecosistema Completo (redes activadas)",
       };
       showToast(`🚀 Abriendo ${targetLabels[target] || target} para ${channel?.nombre}`);
+      await refreshSystem();
       await loadProfiles();
     } else {
-      alert("Error lanzando Chrome: " + data.error);
+      alert("Error lanzando el navegador: " + data.error);
     }
   } catch (err) {
     alert("Error de conexión: " + err.message);
@@ -411,25 +713,21 @@ window.launchChannel = async function (id, target, buttonEl) {
   }
 };
 
-// Asignar video a canal
-window.promptAssignVideo = async function (id) {
-  const current = allProfiles.find((p) => p.id === id);
-  const video = prompt("Escribe el nombre o ruta del video a publicar para este canal:", current?.videoPendiente || "");
-  if (video === null) return;
-
+// Cerrar las sesiones (navegador) abiertas de un canal
+window.closeSessions = async function (id) {
+  const profile = allProfiles.find((p) => p.id === id);
+  if (!confirm(`¿Cerrar el navegador abierto de "${profile?.nombre}"? Las sesiones guardadas NO se borran.`)) {
+    return;
+  }
   try {
-    const res = await fetch(`/api/profiles/${id}/assign-video`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ video: video.trim() }),
-    });
+    const res = await fetch(`/api/profiles/${id}/close`, { method: "POST" });
     const data = await res.json();
     if (data.ok) {
-      showToast("Video asignado correctamente");
-      await loadProfiles();
+      showToast(`🛑 Navegador cerrado (${data.cerradas})`);
+      await refreshSystem();
     }
   } catch (err) {
-    alert("Error al asignar: " + err.message);
+    alert("Error cerrando: " + err.message);
   }
 };
 
@@ -438,7 +736,7 @@ window.markPublished = async function (id) {
   const profile = allProfiles.find((p) => p.id === id);
   if (!profile || !profile.videoPendiente) return;
 
-  if (!confirm(`¿Confirmas que el video "${profile.videoPendiente}" ya fue publicado en ${profile.nombre}?`)) {
+  if (!confirm(`¿Confirmas que el video "${baseName(profile.videoPendiente)}" ya fue publicado en ${profile.nombre}?`)) {
     return;
   }
 
@@ -485,11 +783,14 @@ window.editProfile = function (id) {
   const profile = allProfiles.find((p) => p.id === id);
   if (!profile) return;
 
+  const redes = profileRedes(profile);
+
   modalTitle.textContent = "Editar Canal";
   profileIdInput.value = profile.id;
   profileNameInput.value = profile.nombre;
   profileTagsInput.value = (profile.etiquetas || []).join(", ");
   profileVideoInput.value = profile.videoPendiente || "";
+  Object.entries(redChecks).forEach(([key, chk]) => (chk.checked = Boolean(redes[key])));
   renderProxyDropdown(profile.proxyId);
 
   modalProfile.classList.remove("hidden");
@@ -507,6 +808,7 @@ window.deleteProfile = async function (id) {
     const data = await res.json();
     if (data.ok) {
       showToast("Canal eliminado");
+      await refreshSystem();
       await loadProfiles();
     }
   } catch (err) {

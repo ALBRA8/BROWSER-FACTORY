@@ -1,10 +1,10 @@
-# Sesiones y cookies privadas de Chrome
-data/sesiones/
-
-# Proxies con credenciales privadas
+# Datos locales del usuario (nunca subir al repositorio)
 data/proxies.json
+data/config.json
+data/sesiones/
+data/thumbs/
 
-# Dependencias y logs
+# Sistema
 node_modules/
 *.log
 .DS_Store

@@ -346,7 +346,7 @@ body {
   background: var(--bg-card);
   border: 1px solid var(--border-color);
   border-radius: 12px;
-  overflow: hidden;
+  overflow-x: auto;
 }
 
 .profiles-table {
@@ -655,4 +655,345 @@ input:focus, select:focus {
 @keyframes slideIn {
   from { transform: translateY(20px); opacity: 0; }
   to { transform: translateY(0); opacity: 1; }
+}
+
+/* ===================== V1.0 · NUEVOS ESTILOS ===================== */
+
+/* Badge de versión */
+.version-badge {
+  font-size: 10px;
+  font-weight: 700;
+  color: #a5b4fc;
+  background: rgba(99, 102, 241, 0.15);
+  border: 1px solid rgba(99, 102, 241, 0.4);
+  padding: 2px 8px;
+  border-radius: 10px;
+  vertical-align: middle;
+  margin-left: 6px;
+  letter-spacing: 0.5px;
+}
+
+/* Redes nuevas: X y Telegram */
+.btn-network.x {
+  border-color: rgba(229, 231, 235, 0.35);
+  color: #e5e7eb;
+}
+.btn-network.x:hover {
+  background: rgba(229, 231, 235, 0.12);
+}
+
+.btn-network.telegram {
+  border-color: rgba(34, 158, 217, 0.45);
+  color: #38bdf8;
+}
+.btn-network.telegram:hover {
+  background: rgba(34, 158, 217, 0.15);
+}
+
+/* Badge de canal activo (sesión abierta ahora) */
+.badge-activo {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--color-success);
+  background: rgba(16, 185, 129, 0.12);
+  border: 1px solid rgba(16, 185, 129, 0.4);
+  padding: 2px 8px;
+  border-radius: 10px;
+  margin-left: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  vertical-align: middle;
+}
+
+.badge-activo .dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--color-success);
+  animation: pulsoActivo 1.6s ease infinite;
+}
+
+@keyframes pulsoActivo {
+  0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.5); }
+  50% { opacity: 0.6; box-shadow: 0 0 0 4px rgba(16, 185, 129, 0); }
+}
+
+/* Botón detener sesión */
+.btn-icon.stop:hover {
+  color: var(--color-warning);
+  background: rgba(245, 158, 11, 0.15);
+}
+
+/* Celda de video en la tabla */
+.video-cell {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.video-meta {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  max-width: 200px;
+}
+
+.video-sub {
+  font-size: 10px;
+  color: var(--text-muted);
+  font-family: monospace;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.video-btns {
+  display: flex;
+  gap: 6px;
+}
+
+.mini-thumb {
+  width: 44px;
+  height: 44px;
+  object-fit: cover;
+  border-radius: 6px;
+  border: 1px solid var(--border-color);
+  flex-shrink: 0;
+  background: #111317;
+}
+
+.mini-thumb.thumb-missing {
+  display: none;
+}
+
+.btn-publish.dashed {
+  border-style: dashed;
+  background: transparent;
+}
+
+.btn-publish.wide {
+  padding: 6px 12px;
+}
+
+/* Modal del selector de video */
+.modal-video-card {
+  max-width: 760px;
+}
+
+.modal-video-card .modal-body {
+  max-height: 60vh;
+  overflow-y: auto;
+}
+
+.folder-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  background: #111317;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 10px 14px;
+  margin-bottom: 12px;
+}
+
+.folder-info {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.folder-label {
+  font-size: 11px;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+
+.folder-path {
+  font-family: monospace;
+  font-size: 12px;
+  color: #cbd5e1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 420px;
+}
+
+.folder-actions {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.btn-sm {
+  padding: 6px 12px;
+  font-size: 13px;
+}
+
+.video-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 14px;
+  flex-wrap: wrap;
+}
+
+.search-box-sm {
+  min-width: 220px;
+  padding: 6px 12px;
+  flex: 1;
+  max-width: 340px;
+}
+
+.video-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 12px;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  background: #111317;
+  padding: 12px;
+  min-height: 180px;
+  max-height: 380px;
+  overflow-y: auto;
+}
+
+.video-grid-placeholder {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 13px;
+  padding: 30px 12px;
+}
+
+.video-card {
+  background: #171b23;
+  border: 2px solid var(--border-color);
+  border-radius: 10px;
+  padding: 8px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.video-card:hover {
+  border-color: var(--accent-primary);
+  transform: translateY(-2px);
+}
+
+.video-card.selected {
+  border-color: var(--color-success);
+  background: rgba(16, 185, 129, 0.08);
+  box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.25);
+}
+
+.video-thumb {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  border-radius: 6px;
+  background: #0d0f12;
+}
+
+.video-thumb.placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 26px;
+  color: #3b4252;
+}
+
+.video-card-name {
+  font-size: 12px;
+  font-weight: 600;
+  color: #e5e7eb;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: monospace;
+}
+
+.video-card-meta {
+  font-size: 10px;
+  color: var(--text-muted);
+}
+
+.selected-chip {
+  display: inline-flex;
+  align-items: center;
+  font-size: 12px;
+  color: var(--color-success);
+  background: rgba(16, 185, 129, 0.1);
+  border: 1px solid rgba(16, 185, 129, 0.35);
+  padding: 4px 10px;
+  border-radius: 6px;
+  max-width: 300px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Checkboxes de redes en el modal de canal */
+.redes-checks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.check-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #111317;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 7px 12px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s;
+  margin-bottom: 0;
+}
+
+.check-chip:hover {
+  border-color: var(--accent-primary);
+}
+
+.check-chip input {
+  width: auto;
+  accent-color: var(--accent-primary);
+  cursor: pointer;
+}
+
+.check-chip:has(input:checked) {
+  border-color: rgba(99, 102, 241, 0.55);
+  background: rgba(99, 102, 241, 0.08);
+}
+
+/* Footer del modal de video con etiqueta de selección */
+#modal-video .modal-footer {
+  align-items: center;
+}
+
+#modal-video .modal-footer .selected-file {
+  flex: 1;
+  min-width: 0;
+}
+
+/* Modales con cuerpo desplazable */
+.modal-body {
+  margin-bottom: 4px;
 }
