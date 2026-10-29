@@ -1,10 +1,10 @@
 # 🏭 Browser Factory v1.0
 
-**Centro de mando local para la gestión de canales múltiples de TikTok, YouTube, Instagram, X (Twitter) y Telegram, con sesiones aisladas de navegador, proxies y despacho de videos.**
+**Centro de mando local para la gestión de canales múltiples de Facebook, Instagram, WhatsApp (familia Meta), TikTok, YouTube, X (Twitter) y Telegram, con sesiones aisladas de navegador, proxies y despacho de videos.**
 
 Inspirado en la comodidad de Dolphin Anty, pero:
 - **Ilimitado:** sin límite de cuentas, sin pagos mensuales ni suscripciones en la nube.
-- **Multired de verdad:** cada canal puede activar o desactivar TikTok, YouTube, Instagram, X y Telegram por separado.
+- **Multired de verdad:** cada canal puede activar o desactivar Facebook, Instagram, WhatsApp, TikTok, YouTube, X y Telegram por separado.
 - **Control de videos:** asocia el video que le toca subir a cada canal desde una galería visual con miniaturas, para no mezclar contenido entre canales.
 - **Historial de publicaciones:** marca qué videos ya se publicaron y cuándo.
 - **Sesiones en vivo:** mira qué canales tienen un navegador abierto ahora mismo y ciérralos desde el panel.
@@ -16,7 +16,7 @@ Inspirado en la comodidad de Dolphin Anty, pero:
 
 1. Haz doble clic en `iniciar.bat` (o abre una terminal en `app/` y ejecuta `node server.mjs`).
 2. Se abrirá tu navegador en **`http://127.0.0.1:3300`**.
-3. Añade tus canales con el botón **`+ Nuevo Canal`**: elige el nombre, el nicho y **qué redes sociales usa** (TikTok, YouTube, Instagram, X, Telegram).
+3. Añade tus canales con el botón **`+ Nuevo Canal`**: elige el nombre, el nicho y **qué redes sociales usa** (Facebook, Instagram, WhatsApp, TikTok, YouTube, X, Telegram).
 4. Configura tu **carpeta de videos** (donde tu fábrica de contenido guarda los .mp4): el selector los escaneará y mostrará con miniaturas.
 5. Asigna a cada canal el video que le toca subir desde el modal **`+ Asignar Video`** (galería visual, buscador o explorador de Windows nativo).
 6. Pulsa el botón de la red que quieras (o **`🚀 Abrir Todo`**): se abrirá una ventana aislada del navegador con la sesión de ese canal. Inicia sesión una sola vez y quedará guardada permanentemente.
@@ -29,7 +29,7 @@ Inspirado en la comodidad de Dolphin Anty, pero:
 | # | Función | Qué hace |
 |---|---------|----------|
 | 1 | **Canales ilimitados** | Crear, editar y borrar canales con nombre, nicho/etiquetas, notas y proxy opcional. |
-| 2 | **Redes sociales configurables** | Cada canal decide qué redes usa: TikTok, YouTube, Instagram, X y Telegram. Las redes desactivadas no muestran botones ni se abren con "Abrir Todo". |
+| 2 | **Redes sociales configurables** | Cada canal decide qué redes usa: Facebook, Instagram, WhatsApp (Meta), TikTok, YouTube, X y Telegram. Las redes desactivadas no muestran botones ni se abren con "Abrir Todo". |
 | 3 | **Lanzador aislado en 1 clic** | Abre Chrome/Edge/Brave con la sesión de ese canal (`--user-data-dir` propio). Las cookies y contraseñas quedan guardadas. |
 | 4 | **Modo Celular** | Abre el canal en formato smartphone vertical (Android) con user-agent móvil. |
 | 5 | **Selector de videos con miniaturas** | Escanea tu carpeta de videos y muestra una galería con miniatura, tamaño y fecha. Si tienes `ffmpeg` instalado, genera las miniaturas automáticamente. |

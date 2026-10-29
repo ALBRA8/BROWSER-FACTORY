@@ -288,12 +288,28 @@ body {
   background: rgba(239, 68, 68, 0.15);
 }
 
+.btn-network.facebook {
+  border-color: rgba(24, 119, 242, 0.45);
+  color: #4d9fff;
+}
+.btn-network.facebook:hover {
+  background: rgba(24, 119, 242, 0.15);
+}
+
 .btn-network.instagram {
   border-color: rgba(244, 63, 94, 0.35);
   color: #f43f5e;
 }
 .btn-network.instagram:hover {
   background: rgba(244, 63, 94, 0.15);
+}
+
+.btn-network.whatsapp {
+  border-color: rgba(37, 211, 102, 0.4);
+  color: #25d366;
+}
+.btn-network.whatsapp:hover {
+  background: rgba(37, 211, 102, 0.15);
 }
 
 .btn-network.mobile {
@@ -1026,6 +1042,8 @@ svg.ic {
 }
 
 /* Colores de marca (coinciden con los de .btn-network) */
+.ic-facebook { color: #4d9fff; }
+.ic-whatsapp { color: #25d366; }
 .ic-tiktok { color: #00f2fe; }
 .ic-youtube { color: #ef4444; }
 .ic-instagram { color: #f43f5e; }
