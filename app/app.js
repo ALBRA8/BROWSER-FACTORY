@@ -282,7 +282,7 @@ function render() {
             <div style="margin-top:4px;">${tagsHtml || '<span class="video-empty">—</span>'}</div>
             ${p.ultimoInicio ? `<div class="account-sub" style="margin-top:4px;">Último uso: ${fmtFecha(p.ultimoInicio)}</div>` : ""}
           </td>
-          <td>
+          <td data-label="Redes & Lanzadores">
             <div class="launcher-group">
               ${launcherButtons}
               <button class="btn-network mobile" onclick="launchChannel('${p.id}', 'mobile', this)" title="Abrir en formato Celular (Smartphone vertical / Android) con huella táctil">
@@ -293,9 +293,9 @@ function render() {
               </button>
             </div>
           </td>
-          <td>${videoContent}</td>
-          <td>${proxyHtml}</td>
-          <td>
+          <td data-label="Video asignado">${videoContent}</td>
+          <td data-label="Proxy">${proxyHtml}</td>
+          <td data-label="Acciones">
             <div class="actions-cell">
               ${isActive ? `
               <button class="btn-icon stop" onclick="closeSessions('${p.id}')" title="Cerrar el navegador abierto de este canal">

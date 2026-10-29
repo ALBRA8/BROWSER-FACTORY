@@ -997,3 +997,133 @@ input:focus, select:focus {
 .modal-body {
   margin-bottom: 4px;
 }
+
+/* ===================== RESPONSIVE (preview / móvil) ===================== */
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* --- Tablet horizontal: el topbar se reacomoda en dos filas --- */
+@media (max-width: 1100px) {
+  .topbar {
+    flex-wrap: wrap;
+    gap: 14px;
+  }
+  .logo-area {
+    flex: 1;
+    min-width: 240px;
+  }
+  .header-actions {
+    order: 2;
+  }
+  .header-stats {
+    order: 3;
+    width: 100%;
+    flex-wrap: wrap;
+  }
+}
+
+/* --- Pantalla estrecha: la tabla se convierte en tarjetas apiladas --- */
+@media (max-width: 1060px) {
+  .profiles-table,
+  .profiles-table tbody {
+    display: block;
+  }
+  .profiles-table thead {
+    display: none;
+  }
+  .profiles-table tr {
+    display: block;
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--border-color);
+  }
+  .profiles-table tr:last-child {
+    border-bottom: none;
+  }
+  .profiles-table td {
+    display: block;
+    padding: 8px 0;
+    border-bottom: none;
+  }
+  .profiles-table td[data-label]::before {
+    content: attr(data-label);
+    display: block;
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    color: var(--text-muted);
+    margin-bottom: 5px;
+  }
+  .profiles-table tr:hover td {
+    background-color: transparent;
+  }
+  .actions-cell {
+    justify-content: flex-start;
+  }
+  .account-cell {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+}
+
+/* --- Móvil / preview angosto --- */
+@media (max-width: 640px) {
+  .app-layout {
+    padding: 14px;
+  }
+  .logo-area h1 {
+    font-size: 19px;
+  }
+  .subtitle {
+    font-size: 12px;
+  }
+  .header-actions {
+    width: 100%;
+  }
+  .header-actions .btn {
+    flex: 1 1 auto;
+    justify-content: center;
+  }
+  .controls-bar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+  .search-box {
+    min-width: 0;
+  }
+  .filter-tabs {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+  }
+  .tab-btn {
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .video-name,
+  .video-meta,
+  .folder-path {
+    max-width: 100%;
+  }
+  .modal-card {
+    width: calc(100% - 20px);
+    max-height: calc(100vh - 32px);
+    overflow-y: auto;
+    padding: 18px;
+  }
+  .form-row {
+    grid-template-columns: 1fr;
+  }
+  .toast {
+    left: 16px;
+    right: 16px;
+    bottom: 16px;
+  }
+}
