@@ -22,6 +22,17 @@ Inspirado en la comodidad de Dolphin Anty, pero:
 6. Pulsa el botón de la red que quieras (o **`🚀 Abrir Todo`**): se abrirá una ventana aislada del navegador con la sesión de ese canal. Inicia sesión una sola vez y quedará guardada permanentemente.
 7. Cuando subas el video, pulsa **`✓ Publicado`** para archivarlo en el historial con fecha y hora.
 
+### 🔐 Forma correcta de hacer los login por red social
+
+Cada canal guarda sus sesiones en una carpeta propia de Chrome aislada, así que el login se hace **una sola vez por canal y por red**:
+
+1. Con el canal recién creado, pulsa el botón **`🔐 Login`**: se abrirá una ventana de Chrome con la **página de inicio de sesión de cada red activa** del canal (Facebook → login, Instagram → login, TikTok → login con email, X → flow de login, YouTube Studio → login de Google, WhatsApp/Telegram → código QR).
+2. Inicia sesión en cada pestaña. Si el canal usa proxy, la ventana ya sale por ese proxy (misma IP para todas las redes del canal).
+3. Cierra la ventana (o pulsa el botón de detener en el panel). **Las cookies quedan guardadas en disco** para ese canal.
+4. A partir de ahí, usa los botones normales de cada red o **`🚀 Abrir Todo`**: entrarán directamente sin volver a pedir login.
+
+> Si una sesión se dessynchroniza (p. ej. cambió la contraseña o el proxy), vuelve a pulsar **`🔐 Login`** de ese canal y refresca la sesión.
+
 ---
 
 ## 🧩 Funciones de la versión 1.0

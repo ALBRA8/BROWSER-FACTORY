@@ -68,6 +68,18 @@ const TARGET_URLS = {
   mobile: ["https://www.tiktok.com", "https://www.instagram.com"],
 };
 
+// URLs de PRIMER LOGIN por red social (páginas explícitas de inicio de sesión)
+// — son las que abre el botón «Login» de cada canal la primera vez
+const LOGIN_URLS = {
+  facebook: ["https://www.facebook.com/login"],
+  instagram: ["https://www.instagram.com/accounts/login"],
+  whatsapp: ["https://web.whatsapp.com"],
+  tiktok: ["https://www.tiktok.com/login/phone-or-email/email"],
+  youtube: ["https://studio.youtube.com"],
+  x: ["https://x.com/i/flow/login"],
+  telegram: ["https://web.telegram.org/a/"],
+};
+
 // Asegurar directorios
 if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
 if (!fs.existsSync(SESIONES_DIR)) fs.mkdirSync(SESIONES_DIR, { recursive: true });
@@ -864,7 +876,7 @@ const server = http.createServer(async (req, res) => {
 
       const body = JSON.parse((await readBody(req)) || "{}");
       let target = body.target || "all";
-      const validTargets = [...REDES, "mobile", "all"];
+      const validTargets = [...REDES, "mobile", "all", "login"];
       if (!validTargets.includes(target)) target = "all";
 
       const profileDataDir = path.join(SESIONES_DIR, id);
@@ -881,6 +893,14 @@ const server = http.createServer(async (req, res) => {
         const activas = REDES.filter((red) => profile.redes?.[red] !== false);
         for (const red of activas.length > 0 ? activas : REDES) {
           targetUrls.push(...TARGET_URLS[red]);
+        }
+      } else if (target === "login") {
+        // Primer login: abrir la página de inicio de sesión de cada red activa.
+        // El usuario inicia sesión una vez; las cookies quedan en --user-data-dir.
+        const activas = REDES.filter((red) => profile.redes?.[red] !== false);
+        const lista = activas.length > 0 ? activas : REDES;
+        for (const red of lista) {
+          targetUrls.push(...LOGIN_URLS[red]);
         }
       } else {
         targetUrls.push(...TARGET_URLS[target]);

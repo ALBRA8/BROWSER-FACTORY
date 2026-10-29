@@ -87,6 +87,8 @@ const ICON_MOBILE =
   '<svg class="ic ic-mobile" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect><line x1="12" y1="18" x2="12.01" y2="18"></line></svg>';
 const ICON_ROCKET =
   '<svg class="ic ic-all" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"></path><path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"></path><path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0"></path><path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"></path></svg>';
+const ICON_LOCK =
+  '<svg class="ic ic-lock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>';
 
 // Rellenar los marcadores <span data-ic="..."> de la interfaz estática
 document.querySelectorAll("[data-ic]").forEach((el) => {
@@ -321,6 +323,9 @@ function render() {
               <button class="btn-network all" onclick="launchChannel('${p.id}', 'all', this)" title="Abrir todas las redes activadas de este canal a la vez">
                 ${ICON_ROCKET} Abrir Todo
               </button>
+              <button class="btn-network login" onclick="launchChannel('${p.id}', 'login', this)" title="Primer login: abre la página de inicio de sesión de cada red activa. Inicia sesión una vez, cierra la ventana y la sesión queda guardada">
+                ${ICON_LOCK} Login
+              </button>
             </div>
           </td>
           <td data-label="Video asignado">${videoContent}</td>
@@ -513,6 +518,30 @@ window.confirmAssignVideo = async function () {
 /* ===================== EVENTOS ===================== */
 
 function setupEvents() {
+  // Tema claro/oscuro (sol y luna)
+  const btnTheme = document.getElementById("btn-theme");
+  if (btnTheme) {
+    btnTheme.addEventListener("click", () => {
+      const next = document.documentElement.dataset.theme === "light" ? "dark" : "light";
+      document.documentElement.dataset.theme = next;
+      try { localStorage.setItem("bf-theme", next); } catch {}
+      showToast(next === "light" ? "☀️ Modo claro activado" : "🌙 Modo oscuro activado");
+    });
+  }
+
+  // Guía de primer login: ocultar de forma permanente al cerrar
+  const loginGuide = document.getElementById("login-guide");
+  const btnCloseGuide = document.getElementById("btn-close-guide");
+  if (loginGuide && btnCloseGuide) {
+    let ocultada = false;
+    try { ocultada = localStorage.getItem("bf-guide-login") === "off"; } catch {}
+    if (ocultada) loginGuide.classList.add("hidden");
+    btnCloseGuide.addEventListener("click", () => {
+      loginGuide.classList.add("hidden");
+      try { localStorage.setItem("bf-guide-login", "off"); } catch {}
+    });
+  }
+
   inputSearch.addEventListener("input", (e) => {
     searchQuery = e.target.value.trim();
     render();
