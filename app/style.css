@@ -156,9 +156,15 @@ body {
   padding: 4px;
   border-radius: 8px;
   border: 1px solid var(--border-color);
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
 }
 
 .tab-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   background: transparent;
   border: none;
   color: var(--text-muted);
@@ -168,6 +174,8 @@ body {
   border-radius: 6px;
   cursor: pointer;
   transition: all 0.2s;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .tab-btn:hover {
@@ -1000,6 +1008,37 @@ input:focus, select:focus {
 
 /* ===================== RESPONSIVE (preview / móvil) ===================== */
 
+/* Iconos de marca (SVG inline) — tamaño escalado al texto del botón */
+svg.ic {
+  width: 1em;
+  height: 1em;
+  flex-shrink: 0;
+}
+
+.net-ic {
+  display: inline-flex;
+  align-items: center;
+}
+
+.net-ic svg.ic {
+  width: 13px;
+  height: 13px;
+}
+
+/* Colores de marca (coinciden con los de .btn-network) */
+.ic-tiktok { color: #00f2fe; }
+.ic-youtube { color: #ef4444; }
+.ic-instagram { color: #f43f5e; }
+.ic-x { color: #e5e7eb; }
+.ic-telegram { color: #38bdf8; }
+.ic-mobile { color: #c084fc; }
+.ic-all { color: #ffffff; }
+
+/* Pestaña activa: icono en blanco para no chocar con el fondo índigo */
+.tab-btn.active svg.ic {
+  color: #ffffff;
+}
+
 .header-actions {
   display: flex;
   align-items: center;
@@ -1097,15 +1136,6 @@ input:focus, select:focus {
   }
   .search-box {
     min-width: 0;
-  }
-  .filter-tabs {
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-    scrollbar-width: thin;
-  }
-  .tab-btn {
-    white-space: nowrap;
-    flex-shrink: 0;
   }
   .video-name,
   .video-meta,
