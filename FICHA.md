@@ -10,7 +10,7 @@ Esta ficha es la especificación de la herramienta **Browser Factory** y refleja
 
 ## 1. En una frase
 
-Un centro de mando local para gestionar múltiples canales (TikTok, YouTube, Instagram, X y Telegram) con sesiones de navegador aisladas de un clic, asociando a cada canal el video que le toca publicar desde una galería visual, para no mezclar contenido ni sufrir límites de pago.
+Un centro de mando local para gestionar múltiples canales (TikTok, YouTube, Google/Gmail, Instagram, X y Telegram, más la familia Meta: Facebook y WhatsApp) con sesiones de navegador aisladas de un clic, asociando a cada canal el video que le toca publicar desde una galería visual, para no mezclar contenido ni sufrir límites de pago.
 
 ---
 
@@ -25,7 +25,7 @@ Para creadores de contenido y administradores de múltiples canales que necesita
 | # | Función | Qué hace | Cómo se hace técnicamente |
 |---|---------|----------|---------------------------|
 | 1 | **Gestión ilimitada de canales** | Crear, editar y borrar canales (nombre, nicho/etiquetas, proxy opcional). | Archivo local `data/perfiles.json`, sin límites ni nube. |
-| 2 | **Redes sociales por canal** | Cada canal activa/desactiva TikTok, YouTube, Instagram, X y Telegram. | Campo `redes` en el perfil; el panel y "Abrir Todo" respetan la configuración. |
+| 2 | **Redes sociales por canal** | Cada canal activa/desactiva TikTok, YouTube, Google (Gmail), Instagram, Facebook, WhatsApp, X y Telegram. | Campo `redes` en el perfil; el panel y "Abrir Todo" respetan la configuración. |
 | 3 | **Lanzador aislado en 1 clic** | Botón por red social que abre el navegador con la sesión de ese canal guardada permanentemente. | Lanza Chrome/Edge/Brave con `--user-data-dir="data/sesiones/<id>"`. |
 | 4 | **Modo Celular** | Abre el canal como si fuera un smartphone Android vertical. | `--user-agent` móvil de Pixel 8 + ventana 412x915 + eventos táctiles. |
 | 5 | **Selector de videos con miniaturas** | Escanea la carpeta de videos del usuario y asigna el video de cada canal desde una galería con miniatura, tamaño y fecha. | `GET /api/videos` escanea la carpeta de `data/config.json`; miniaturas con ffmpeg (opcional) cacheadas en `data/thumbs/`. |
@@ -40,14 +40,14 @@ Para creadores de contenido y administradores de múltiples canales que necesita
 ## 4. Pantalla principal (Dashboard)
 
 - **Cabecera:** logo "Browser Factory v1.0", estado del motor (Chrome/Edge/Brave), canales totales, canales activos ahora, videos pendientes y proxies guardados. Botones `Proxies`, `+ Nuevo Canal` y `Apagar`.
-- **Filtros rápidos:** `Todos`, `Con Video Pendiente`, `TikTok`, `YouTube`, `Instagram`, `X`, `Telegram`.
+- **Filtros rápidos:** `Todos`, `Con Video Pendiente`, `TikTok`, `YouTube`, `Google`, `Instagram`, `Facebook`, `WhatsApp`, `X`, `Telegram`.
 - **Tabla de canales:**
   - **Canal:** nombre + insignia verde "Activo" (sesión abierta) + etiquetas de nicho + último uso.
   - **Lanzadores:** un botón por cada red activada del canal + `📱 Celular` + `🚀 Abrir Todo`.
   - **Video asignado:** miniatura + nombre + ruta, botón de cambiar video y botón verde `✓ Publicado`.
   - **Proxy:** nombre y host del proxy aplicado, o "Directo".
   - **Acciones:** cerrar sesión (si está activo), historial, editar y borrar.
-- **Modal Canal:** nombre, checkboxes de redes (TikTok, YouTube, Instagram, X, Telegram), etiquetas, video pendiente manual y proxy.
+- **Modal Canal:** nombre, checkboxes de redes (TikTok, YouTube, Google/Gmail, Instagram, Facebook, WhatsApp, X, Telegram), etiquetas, video pendiente manual y proxy.
 - **Modal Selector de Video:** barra con la carpeta configurada, botones "Elegir carpeta" y "Examinar archivo" (diálogo nativo), buscador y galería de tarjetas con miniatura; doble clic asigna directamente.
 
 ---

@@ -64,7 +64,7 @@ test("video thumbnails only serve whitelisted video extensions", () => {
 
 test("launch targets are restricted to the known network list", () => {
   assert.match(server, /const validTargets = \[\.\.\.REDES, "mobile", "all", "login"\]/);
-  assert.match(server, /const REDES = \["facebook", "instagram", "whatsapp", "tiktok", "youtube", "x", "telegram"\]/);
+  assert.match(server, /const REDES = \["facebook", "instagram", "whatsapp", "tiktok", "youtube", "google", "x", "telegram"\]/);
 });
 
 test("native file dialog is Windows-only", () => {

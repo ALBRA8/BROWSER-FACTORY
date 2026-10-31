@@ -36,6 +36,7 @@ const redChecks = {
   whatsapp: document.getElementById("red-whatsapp"),
   tiktok: document.getElementById("red-tiktok"),
   youtube: document.getElementById("red-youtube"),
+  google: document.getElementById("red-google"),
   x: document.getElementById("red-x"),
   telegram: document.getElementById("red-telegram"),
 };
@@ -78,6 +79,7 @@ const ICON_SVG = {
   // Otras familias
   tiktok: '<svg class="ic ic-tiktok" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.1 1.59-2.87 2.65-4.77 2.81-1.12.09-2.27-.03-3.32-.51-.83-.37-1.6-.9-2.24-1.56-1.55-1.55-2.34-3.81-2.02-5.98.26-1.85 1.25-3.54 2.68-4.7 1.5-1.21 3.48-1.77 5.4-1.55.02 1.34-.01 2.68-.02 4.02-.87-.28-1.82-.25-2.66.06-.87.31-1.61.9-2.1 1.67-.43.66-.66 1.45-.63 2.24.02 1.06.5 2.1 1.3 2.79.76.67 1.81.99 2.82.86 1.02-.13 1.95-.72 2.53-1.56.29-.42.5-.9.61-1.4.09-.42.11-.86.11-1.29.01-4.65-.01-9.31.01-13.96z"/></svg>',
   youtube: '<svg class="ic ic-youtube" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>',
+  google: '<svg class="ic ic-google" viewBox="0 0 24 24" aria-hidden="true"><path fill="#4285F4" d="M23.49 12.27c0-.79-.07-1.54-.19-2.27H12v4.51h6.47c-.29 1.48-1.14 2.73-2.4 3.58v3h3.86c2.26-2.09 3.56-5.17 3.56-8.82z"/><path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.86-3c-1.08.72-2.45 1.16-4.07 1.16-3.13 0-5.78-2.11-6.73-4.96H1.29v3.09C3.26 21.3 7.31 24 12 24z"/><path fill="#FBBC05" d="M5.27 14.29c-.25-.72-.38-1.49-.38-2.29s.14-1.57.38-2.29V6.62H1.29C.47 8.24 0 10.06 0 12s.47 3.76 1.29 5.38l3.98-3.09z"/><path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.31 0 3.26 2.7 1.29 6.62l3.98 3.09C6.22 6.86 8.87 4.75 12 4.75z"/></svg>',
   x: '<svg class="ic ic-x" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M18.901 1.153h3.68l-8.04 9.19L24 22.846h-7.406l-5.8-7.584-6.638 7.584H.474l8.6-9.83L0 1.154h7.594l5.243 6.932ZM17.61 20.644h2.039L6.486 3.24H4.298Z"/></svg>',
   telegram: '<svg class="ic ic-telegram" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/></svg>',
 };
@@ -103,6 +105,7 @@ const NETWORK_META = {
   // Otras familias
   tiktok: { icon: ICON_SVG.tiktok, label: "TikTok", urlTitle: "Abrir TikTok Studio para subir video en este canal" },
   youtube: { icon: ICON_SVG.youtube, label: "YouTube", urlTitle: "Abrir YouTube Studio para subir Short/Video" },
+  google: { icon: ICON_SVG.google, label: "Google", urlTitle: "Abrir Gmail / cuenta de Google de este canal" },
   x: { icon: ICON_SVG.x, label: "X", urlTitle: "Abrir X (Twitter) con el compositor de post" },
   telegram: { icon: ICON_SVG.telegram, label: "Telegram", urlTitle: "Abrir Telegram Web para publicar en canales" },
 };
@@ -214,7 +217,7 @@ async function loadProfiles() {
 }
 
 function profileRedes(p) {
-  const base = { tiktok: true, youtube: true, instagram: true, x: true, telegram: true };
+  const base = { tiktok: true, youtube: true, google: true, instagram: true, x: true, telegram: true };
   return { ...base, ...(p.redes || {}) };
 }
 
@@ -224,7 +227,7 @@ function render() {
   const filtered = allProfiles.filter((p) => {
     const redes = profileRedes(p);
     if (currentFilter === "pending" && !p.videoPendiente) return false;
-    if (["facebook", "instagram", "whatsapp", "tiktok", "youtube", "x", "telegram"].includes(currentFilter)) {
+    if (["facebook", "instagram", "whatsapp", "tiktok", "youtube", "google", "x", "telegram"].includes(currentFilter)) {
       if (!redes[currentFilter]) return false;
     }
 
@@ -662,6 +665,7 @@ function setupEvents() {
         whatsapp: redChecks.whatsapp.checked,
         tiktok: redChecks.tiktok.checked,
         youtube: redChecks.youtube.checked,
+        google: redChecks.google.checked,
         x: redChecks.x.checked,
         telegram: redChecks.telegram.checked,
       },
@@ -754,6 +758,7 @@ window.launchChannel = async function (id, target, buttonEl) {
       const targetLabels = {
         tiktok: "TikTok",
         youtube: "YouTube Studio",
+        google: "Gmail / Google",
         instagram: "Instagram",
         x: "X (Twitter)",
         telegram: "Telegram Web",

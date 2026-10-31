@@ -440,6 +440,8 @@ html[data-theme="light"] .btn-network.facebook:hover { background: rgba(24, 119,
 html[data-theme="light"] .btn-network.whatsapp,
 html[data-theme="light"] .ic-whatsapp { color: #1da851; }
 html[data-theme="light"] .btn-network.whatsapp:hover { background: rgba(29, 168, 81, 0.1); }
+html[data-theme="light"] .btn-network.google { color: #1a73e8; }
+html[data-theme="light"] .btn-network.google:hover { background: rgba(26, 115, 232, 0.1); }
 html[data-theme="light"] .btn-network.mobile { color: #9333ea; }
 html[data-theme="light"] .btn-network.login { color: #b45309; }
 html[data-theme="light"] .btn-network.login:hover { background: rgba(180, 83, 9, 0.1); }
@@ -855,6 +857,15 @@ input:focus, select:focus {
 }
 .btn-network.telegram:hover {
   background: rgba(34, 158, 217, 0.15);
+}
+
+/* Red nueva: Google (Gmail) */
+.btn-network.google {
+  border-color: rgba(66, 133, 244, 0.45);
+  color: #8ab4f8;
+}
+.btn-network.google:hover {
+  background: rgba(66, 133, 244, 0.15);
 }
 
 /* Badge de canal activo (sesión abierta ahora) */

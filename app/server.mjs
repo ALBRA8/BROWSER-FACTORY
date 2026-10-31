@@ -1,7 +1,7 @@
 // Servidor local de Browser Factory v1.0
 // Sirve la interfaz web, gestiona canales, proxies, redes sociales (familia Meta:
-// Facebook, Instagram y WhatsApp; más TikTok, YouTube, X y Telegram), el selector
-// de videos con miniaturas y el lanzamiento
+// Facebook, Instagram y WhatsApp; más TikTok, YouTube, Google/Gmail, X y Telegram),
+// el selector de videos con miniaturas y el lanzamiento
 // de Chrome aislado por canal.
 
 import http from "node:http";
@@ -51,7 +51,7 @@ function origenPermitido(origin) {
 }
 
 // Redes sociales soportadas por canal (agrupadas por familia: Meta primero)
-const REDES = ["facebook", "instagram", "whatsapp", "tiktok", "youtube", "x", "telegram"];
+const REDES = ["facebook", "instagram", "whatsapp", "tiktok", "youtube", "google", "x", "telegram"];
 
 // Extensiones de video reconocidas por el selector de videos
 const VIDEO_EXTS = new Set([".mp4", ".mov", ".mkv", ".webm", ".avi", ".m4v"]);
@@ -63,6 +63,7 @@ const TARGET_URLS = {
   whatsapp: ["https://web.whatsapp.com"],
   tiktok: ["https://www.tiktok.com/upload?lang=es"],
   youtube: ["https://studio.youtube.com"],
+  google: ["https://mail.google.com"],
   x: ["https://x.com/compose/post"],
   telegram: ["https://web.telegram.org/a/"],
   mobile: ["https://www.tiktok.com", "https://www.instagram.com"],
@@ -76,6 +77,7 @@ const LOGIN_URLS = {
   whatsapp: ["https://web.whatsapp.com"],
   tiktok: ["https://www.tiktok.com/login/phone-or-email/email"],
   youtube: ["https://studio.youtube.com"],
+  google: ["https://accounts.google.com/ServiceLogin?continue=https://mail.google.com"],
   x: ["https://x.com/i/flow/login"],
   telegram: ["https://web.telegram.org/a/"],
 };
@@ -118,7 +120,7 @@ if (!fs.existsSync(PROFILES_FILE)) {
           id: "ejemplo-tiktok",
           nombre: "Canal Curiosidades",
           etiquetas: ["Curiosidades", "Viral"],
-          redes: { facebook: true, instagram: true, whatsapp: true, tiktok: true, youtube: true, x: true, telegram: true },
+          redes: { facebook: true, instagram: true, whatsapp: true, tiktok: true, youtube: true, google: true, x: true, telegram: true },
           proxyId: "",
           videoPendiente: "curiosidades_espacio_01.mp4",
           historial: [],
@@ -129,7 +131,7 @@ if (!fs.existsSync(PROFILES_FILE)) {
           id: "ejemplo-youtube",
           nombre: "Canal Finanzas Pro",
           etiquetas: ["Finanzas", "Shorts"],
-          redes: { facebook: true, instagram: true, whatsapp: true, tiktok: true, youtube: true, x: true, telegram: true },
+          redes: { facebook: true, instagram: true, whatsapp: true, tiktok: true, youtube: true, google: true, x: true, telegram: true },
           proxyId: "",
           videoPendiente: "finanzas_regla_50_30.mp4",
           historial: [],
@@ -215,7 +217,7 @@ function getProfiles() {
     // Normalizar campo `redes` para perfiles creados antes de la v1.0
     return list.map((p) => ({
       ...p,
-      redes: { facebook: true, instagram: true, whatsapp: true, tiktok: true, youtube: true, x: true, telegram: true, ...(p.redes || {}) },
+      redes: { facebook: true, instagram: true, whatsapp: true, tiktok: true, youtube: true, google: true, x: true, telegram: true, ...(p.redes || {}) },
       historial: Array.isArray(p.historial) ? p.historial : [],
     }));
   } catch {
@@ -240,9 +242,9 @@ function saveProxies(proxies) {
 }
 
 function normalizeRedes(input) {
-  const base = { facebook: false, instagram: false, whatsapp: false, tiktok: false, youtube: false, x: false, telegram: false };
+  const base = { facebook: false, instagram: false, whatsapp: false, tiktok: false, youtube: false, google: false, x: false, telegram: false };
   if (!input || typeof input !== "object") {
-    return { facebook: true, instagram: true, whatsapp: true, tiktok: true, youtube: true, x: true, telegram: true };
+    return { facebook: true, instagram: true, whatsapp: true, tiktok: true, youtube: true, google: true, x: true, telegram: true };
   }
   for (const red of REDES) {
     if (red in input) base[red] = Boolean(input[red]);

@@ -1,7 +1,7 @@
 {
   "name": "browser-factory",
   "version": "1.0.0",
-  "description": "Centro de mando local para gestionar canales múltiples (TikTok, YouTube, Instagram, X y Telegram) con sesiones aisladas de Chrome, proxies y despacho de videos.",
+  "description": "Centro de mando local para gestionar canales múltiples (TikTok, YouTube, Google/Gmail, Instagram, X y Telegram) con sesiones aisladas de Chrome, proxies y despacho de videos.",
   "type": "module",
   "main": "app/server.mjs",
   "scripts": {
@@ -13,6 +13,8 @@
     "multi-account",
     "tiktok",
     "youtube",
+    "google",
+    "gmail",
     "instagram",
     "twitter",
     "telegram",
