@@ -27,15 +27,16 @@ Inspirado en la comodidad de Dolphin Anty, pero:
 Cada canal guarda sus sesiones en una carpeta propia de Chrome aislada, así que el login se hace **una sola vez por canal y por red**:
 
 1. Con el canal recién creado, pulsa el botón **`🔐 Login`**: se abrirá una ventana de Chrome con la **página de inicio de sesión de cada red activa** del canal (Facebook → login, Instagram → login, TikTok → login con email, X → flow de login, YouTube Studio → login de Google, Google/Gmail → accounts.google.com, WhatsApp/Telegram → código QR).
-2. Inicia sesión en cada pestaña. Si el canal usa proxy, la ventana ya sale por ese proxy (misma IP para todas las redes del canal).
-3. Cierra la ventana (o pulsa el botón de detener en el panel). **Las cookies quedan guardadas en disco** para ese canal.
-4. A partir de ahí, usa los botones normales de cada red o **`🚀 Abrir Todo`**: entrarán directamente sin volver a pedir login.
+2. **¿Solo necesitas una red?** Usa el botón **`🔑`** que aparece junto a cada red del canal: abre únicamente la página de inicio de sesión de esa red, sin abrir el resto (útil para refrescar una sola sesión).
+3. Inicia sesión en cada pestaña. Si el canal usa proxy, la ventana ya sale por ese proxy (misma IP para todas las redes del canal).
+4. Cierra la ventana (o pulsa el botón de detener en el panel). **Las cookies quedan guardadas en disco** para ese canal.
+5. A partir de ahí, usa los botones normales de cada red o **`🚀 Abrir Todo`**: entrarán directamente sin volver a pedir login.
 
-> Si una sesión se dessynchroniza (p. ej. cambió la contraseña o el proxy), vuelve a pulsar **`🔐 Login`** de ese canal y refresca la sesión.
+> Si una sesión se dessynchroniza (p. ej. cambió la contraseña o el proxy), pulsa el **`🔑`** de esa red o **`🔐 Login`** del canal y refresca la sesión.
 
 ---
 
-## 🧩 Funciones de la versión 1.0
+## 🧩 Funciones de la versión 1.1
 
 | # | Función | Qué hace |
 |---|---------|----------|
@@ -48,7 +49,8 @@ Cada canal guarda sus sesiones en una carpeta propia de Chrome aislada, así que
 | 7 | **Historial y control de publicación** | "✓ Publicado" archiva el video en el historial del canal con fecha y hora para no repetir contenido. |
 | 8 | **Sesiones activas en vivo** | El panel muestra una insignia verde "Activo" en los canales con navegador abierto y permite cerrarlos desde el panel. |
 | 9 | **Proxies con auto-login** | Guarda proxies en formato Dolphin Anty (`http://ip:puerto:usuario:clave:nombre`) y los aplica por canal, con extensión temporal que inyecta las credenciales sin alertas. |
-| 10 | **Seguridad local reforzada** | Bloqueo de path traversal, límite de 1 MB por petición, validación de IDs, cabeceras `nosniff` y CSP, sin CORS hacia webs externas. |
+| 10 | **Login individual por red (🔑)** | Junto a cada red del canal hay un botón 🔑 que abre solo la página de inicio de sesión de esa red, sin abrir el resto — ideal para refrescar una única sesión. |
+| 11 | **Seguridad local reforzada** | Bloqueo de path traversal, límite de 1 MB por petición, validación de IDs, cabeceras `nosniff` y CSP, sin CORS hacia webs externas. |
 
 ---
 

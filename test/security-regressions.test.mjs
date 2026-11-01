@@ -63,8 +63,15 @@ test("video thumbnails only serve whitelisted video extensions", () => {
 });
 
 test("launch targets are restricted to the known network list", () => {
-  assert.match(server, /const validTargets = \[\.\.\.REDES, "mobile", "all", "login"\]/);
+  assert.match(server, /const validTargets = \[\.\.\.REDES, "mobile", "all", "login", \.\.\.REDES\.map\(\(r\) => `login:\$\{r\}`\)\]/);
   assert.match(server, /const REDES = \["facebook", "instagram", "whatsapp", "tiktok", "youtube", "google", "x", "telegram"\]/);
+});
+
+test("per-network login target opens only that network's login page", () => {
+  assert.match(server, /target\.startsWith\("login:"\)/);
+  assert.match(server, /const red = target\.slice\("login:"\.length\)/);
+  assert.match(server, /targetUrls\.push\(\.\.\.LOGIN_URLS\[red\]\)/);
+  assert.match(server, /no está activada en este canal/);
 });
 
 test("native file dialog is Windows-only", () => {

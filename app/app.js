@@ -91,6 +91,8 @@ const ICON_ROCKET =
   '<svg class="ic ic-all" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"></path><path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"></path><path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0"></path><path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"></path></svg>';
 const ICON_LOCK =
   '<svg class="ic ic-lock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>';
+const ICON_KEY =
+  '<svg class="ic ic-key" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"></path></svg>';
 
 // Rellenar los marcadores <span data-ic="..."> de la interfaz estática
 document.querySelectorAll("[data-ic]").forEach((el) => {
@@ -299,12 +301,17 @@ function render() {
         : `<span class="video-empty">Directo</span>`;
 
       // Lanzadores según las redes activadas del canal
+      // Cada red lleva su botón 🔑 de login individual: abre SOLO la página de
+      // inicio de sesión de esa red, sin abrir el resto.
       const launcherButtons = Object.entries(NETWORK_META)
         .filter(([key]) => redes[key])
         .map(([key, meta]) => `
-          <button class="btn-network ${key}" onclick="launchChannel('${p.id}', '${key}', this)" title="${meta.urlTitle}">
-            ${meta.icon} ${meta.label}
-          </button>
+          <span class="launch-pair">
+            <button class="btn-network ${key}" onclick="launchChannel('${p.id}', '${key}', this)" title="${meta.urlTitle}">
+              ${meta.icon} ${meta.label}
+            </button>
+            <button class="btn-key ${key}" onclick="launchChannel('${p.id}', 'login:${key}', this)" title="🔑 Login solo de ${meta.label}: abre la página de inicio de sesión de ${meta.label} en este canal, sin abrir el resto. La sesión queda guardada" aria-label="Login individual de ${meta.label}">${ICON_KEY}</button>
+          </span>
         `)
         .join("");
 
@@ -765,7 +772,10 @@ window.launchChannel = async function (id, target, buttonEl) {
         mobile: "📱 Celular Android (Smartphone)",
         all: "Ecosistema Completo (redes activadas)",
       };
-      showToast(`🚀 Abriendo ${targetLabels[target] || target} para ${channel?.nombre}`);
+      const label = target.startsWith("login:")
+        ? `🔑 Login de ${NETWORK_META[target.slice("login:".length)]?.label || target.slice("login:".length)}`
+        : targetLabels[target] || target;
+      showToast(`🚀 Abriendo ${label} para ${channel?.nombre}`);
       await refreshSystem();
       await loadProfiles();
     } else {

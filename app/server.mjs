@@ -12,7 +12,7 @@ import crypto from "node:crypto";
 import { spawn, execFile } from "node:child_process";
 import { fileURLToPath } from "node:url";
 
-const VERSION = "1.0.0";
+const VERSION = "1.1.0";
 const PORT = Number(process.env.PUERTO || process.env.PORT || 3300);
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const DATA_DIR = path.join(__dirname, "..", "data");
@@ -878,7 +878,8 @@ const server = http.createServer(async (req, res) => {
 
       const body = JSON.parse((await readBody(req)) || "{}");
       let target = body.target || "all";
-      const validTargets = [...REDES, "mobile", "all", "login"];
+      // "login:<red>" inicia sesión SOLO en esa red (botón 🔑 junto a cada lanzador)
+      const validTargets = [...REDES, "mobile", "all", "login", ...REDES.map((r) => `login:${r}`)];
       if (!validTargets.includes(target)) target = "all";
 
       const profileDataDir = path.join(SESIONES_DIR, id);
@@ -904,6 +905,15 @@ const server = http.createServer(async (req, res) => {
         for (const red of lista) {
           targetUrls.push(...LOGIN_URLS[red]);
         }
+      } else if (target.startsWith("login:")) {
+        // Login individual (🔑): abrir SOLO la página de inicio de sesión de esa red,
+        // sin abrir el resto. Las cookies quedan en --user-data-dir del canal.
+        const red = target.slice("login:".length);
+        if (profile.redes?.[red] === false) {
+          sendJson(res, 400, { error: `La red ${red} no está activada en este canal` });
+          return;
+        }
+        targetUrls.push(...LOGIN_URLS[red]);
       } else {
         targetUrls.push(...TARGET_URLS[target]);
       }

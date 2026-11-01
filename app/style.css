@@ -267,6 +267,36 @@ body {
   flex-wrap: wrap;
 }
 
+/* Par de lanzadores: red + su login individual (🔑) */
+.launch-pair {
+  display: inline-flex;
+  align-items: stretch;
+  gap: 3px;
+}
+
+.btn-key {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  min-height: 26px;
+  padding: 0;
+  border-radius: 6px;
+  cursor: pointer;
+  border: 1px dashed var(--border-btn-net);
+  background: var(--bg-btn-net);
+  color: var(--text-muted);
+  transition: all 0.15s ease;
+}
+.btn-key .ic {
+  width: 13px;
+  height: 13px;
+}
+.btn-key:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.2);
+}
+
 .btn-network {
   display: inline-flex;
   align-items: center;
@@ -445,6 +475,13 @@ html[data-theme="light"] .btn-network.google:hover { background: rgba(26, 115, 2
 html[data-theme="light"] .btn-network.mobile { color: #9333ea; }
 html[data-theme="light"] .btn-network.login { color: #b45309; }
 html[data-theme="light"] .btn-network.login:hover { background: rgba(180, 83, 9, 0.1); }
+html[data-theme="light"] .btn-key { color: #6b7280; }
+html[data-theme="light"] .btn-key.tiktok { color: #00a3bd; }
+html[data-theme="light"] .btn-key.x { color: #111827; }
+html[data-theme="light"] .btn-key.telegram { color: #0284c7; }
+html[data-theme="light"] .btn-key.facebook { color: #1877f2; }
+html[data-theme="light"] .btn-key.whatsapp { color: #1da851; }
+html[data-theme="light"] .btn-key.google { color: #1a73e8; }
 html[data-theme="light"] .logo-badge {
   box-shadow: 0 2px 10px rgba(79, 70, 229, 0.35);
 }
@@ -867,6 +904,24 @@ input:focus, select:focus {
 .btn-network.google:hover {
   background: rgba(66, 133, 244, 0.15);
 }
+
+/* Login individual (🔑): colores de marca por red, como .btn-network */
+.btn-key.tiktok { border-color: rgba(0, 242, 254, 0.35); color: #00f2fe; }
+.btn-key.tiktok:hover { background: rgba(0, 242, 254, 0.15); border-style: solid; }
+.btn-key.youtube { border-color: rgba(239, 68, 68, 0.35); color: #ef4444; }
+.btn-key.youtube:hover { background: rgba(239, 68, 68, 0.15); border-style: solid; }
+.btn-key.facebook { border-color: rgba(24, 119, 242, 0.45); color: #4d9fff; }
+.btn-key.facebook:hover { background: rgba(24, 119, 242, 0.15); border-style: solid; }
+.btn-key.instagram { border-color: rgba(244, 63, 94, 0.35); color: #f43f5e; }
+.btn-key.instagram:hover { background: rgba(244, 63, 94, 0.15); border-style: solid; }
+.btn-key.whatsapp { border-color: rgba(37, 211, 102, 0.4); color: #25d366; }
+.btn-key.whatsapp:hover { background: rgba(37, 211, 102, 0.15); border-style: solid; }
+.btn-key.google { border-color: rgba(66, 133, 244, 0.45); color: #8ab4f8; }
+.btn-key.google:hover { background: rgba(66, 133, 244, 0.15); border-style: solid; }
+.btn-key.x { border-color: rgba(229, 231, 235, 0.35); color: #e5e7eb; }
+.btn-key.x:hover { background: rgba(229, 231, 235, 0.12); border-style: solid; }
+.btn-key.telegram { border-color: rgba(34, 158, 217, 0.45); color: #38bdf8; }
+.btn-key.telegram:hover { background: rgba(34, 158, 217, 0.15); border-style: solid; }
 
 /* Badge de canal activo (sesión abierta ahora) */
 .badge-activo {
