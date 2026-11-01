@@ -74,6 +74,30 @@ test("per-network login target opens only that network's login page", () => {
   assert.match(server, /no está activada en este canal/);
 });
 
+test("credential API never returns passwords and validates profile ID", () => {
+  assert.match(server, /const credSafe = \{\}/);
+  assert.match(server, /tieneClave: Boolean\(c\.clave\)/);
+  assert.match(server, /\/credenciales\$/);
+  assert.match(server, /\/credenciales\\\/\(\[\^\/\]\+\)\$/);
+  assert.match(server, /Red inválida/);
+  const validationCount = (server.match(/if \(!isSafeProfileId\(id\)\)/g) || []).length;
+  assert.ok(validationCount >= 7, "credential GET/POST/DELETE must validate the profile ID too");
+});
+
+test("auto-login extension embeds credentials locally and loads through one flag", () => {
+  assert.match(server, /function setupAutoLoginExtension\(profileDataDir, credenciales\)/);
+  assert.match(server, /const BF_CRED = __BF_CREDENCIALES__/);
+  assert.match(server, /contentJs\.replace\("__BF_CREDENCIALES__", JSON\.stringify\(map\)\)/);
+  assert.match(server, /manifest_version: 3/);
+  assert.match(server, /--load-extension=\$\{extPaths\.join\(","\)\}/);
+  assert.match(server, /autoLogin: autoLoginActivo/);
+});
+
+test("credential store file is git-ignored", async () => {
+  const gitignore = await readFile(new URL("../.gitignore", import.meta.url), "utf8");
+  assert.match(gitignore, /data\/credenciales\.json/);
+});
+
 test("native file dialog is Windows-only", () => {
   assert.match(server, /El diálogo nativo solo está disponible en Windows/);
 });

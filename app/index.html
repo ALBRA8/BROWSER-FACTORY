@@ -20,7 +20,7 @@
       <div class="logo-area">
         <div class="logo-badge">BF</div>
         <div>
-          <h1>Browser Factory <span class="version-badge">v1.1</span></h1>
+          <h1>Browser Factory <span class="version-badge">v1.2</span></h1>
           <p class="subtitle">Gestor Multicanal & Despachador de Videos (Todo-en-Uno)</p>
         </div>
       </div>
@@ -97,6 +97,8 @@
         <strong>Forma correcta de hacer los login por red social:</strong>
         la primera vez pulsa <em>🔐 Login</em> (abre las páginas de inicio de sesión de todas las redes activas del canal)
         o usa el botón <em>🔑</em> junto a cada red para iniciar sesión solo en esa red, sin abrir el resto.
+        <strong>¿Quieres que sea todo automático?</strong> Guarda el usuario y la clave de cada red en el botón de llave
+        de la columna Acciones: el navegador rellenará y enviará los formularios solo.
         Inicia sesión una sola vez en cada pestaña, cierra la ventana y listo:
         las cookies quedan guardadas en disco para ese canal y las siguientes entradas abren directo sin login.
       </div>
@@ -276,6 +278,28 @@
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary" id="btn-dismiss-history">Cerrar</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal Claves de Auto-Login (🔑) -->
+    <div id="modal-creds" class="modal-backdrop hidden">
+      <div class="modal-card" style="max-width: 640px;">
+        <div class="modal-header">
+          <h2 id="creds-title">🔑 Claves de auto-login</h2>
+          <button class="btn-close" id="btn-close-creds">✕</button>
+        </div>
+        <div class="modal-body">
+          <p class="cred-intro">
+            Guarda aquí el usuario y la clave de cada red de este canal. Al pulsar <strong>Login</strong> (🔐 o 🔑),
+            el navegador <strong>rellena y envía los formularios solo</strong>. Las claves se guardan únicamente en
+            tu PC (<code>data/credenciales.json</code>, excluido del repositorio) y nunca se muestran de vuelta.
+          </p>
+          <div id="creds-list"><!-- Filas dinámicas por red --></div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" id="btn-cancel-creds">Cancelar</button>
+          <button type="button" class="btn btn-primary" id="btn-save-creds">💾 Guardar Claves</button>
         </div>
       </div>
     </div>

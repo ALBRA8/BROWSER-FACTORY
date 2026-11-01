@@ -1,6 +1,7 @@
 # Datos locales del usuario (nunca subir al repositorio)
 data/proxies.json
 data/config.json
+data/credenciales.json
 data/sesiones/
 data/thumbs/
 

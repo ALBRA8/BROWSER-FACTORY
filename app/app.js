@@ -66,9 +66,18 @@ const historyTitle = document.getElementById("history-title");
 const historyProfileName = document.getElementById("history-profile-name");
 const historyItems = document.getElementById("history-items");
 
+// Modal Claves (auto-login 🔑)
+const modalCreds = document.getElementById("modal-creds");
+const credsTitle = document.getElementById("creds-title");
+const credsList = document.getElementById("creds-list");
+
 const inputSearch = document.getElementById("input-search");
 const tabButtons = document.querySelectorAll(".tab-btn");
 const toastEl = document.getElementById("toast");
+
+// Redes que admiten usuario/clave para auto-login (WhatsApp y Telegram son por QR)
+const REDES_CLAVES = ["facebook", "instagram", "tiktok", "youtube", "google", "x"];
+let credsTargetId = null;
 
 // Iconos SVG de marca (24x24, Simple Icons) — heredan color via currentColor
 const ICON_SVG = {
@@ -348,6 +357,9 @@ function render() {
               </button>` : ""}
               <button class="btn-icon" onclick="viewHistory('${p.id}')" title="Ver historial de publicaciones de este canal">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+              </button>
+              <button class="btn-icon creds" onclick="openCredsModal('${p.id}')" title="Claves para auto-login: guarda usuario y clave por red; al pulsar Login el navegador rellena y envía los formularios solo">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"></path></svg>
               </button>
               <button class="btn-icon" onclick="editProfile('${p.id}')" title="Editar canal">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
@@ -657,6 +669,11 @@ function setupEvents() {
   document.getElementById("btn-close-history").addEventListener("click", () => modalHistory.classList.add("hidden"));
   document.getElementById("btn-dismiss-history").addEventListener("click", () => modalHistory.classList.add("hidden"));
 
+  // Modal Claves (auto-login)
+  document.getElementById("btn-close-creds").addEventListener("click", () => modalCreds.classList.add("hidden"));
+  document.getElementById("btn-cancel-creds").addEventListener("click", () => modalCreds.classList.add("hidden"));
+  document.getElementById("btn-save-creds").addEventListener("click", saveCreds);
+
   // Guardar Canal
   formProfile.addEventListener("submit", async (e) => {
     e.preventDefault();
@@ -775,7 +792,8 @@ window.launchChannel = async function (id, target, buttonEl) {
       const label = target.startsWith("login:")
         ? `🔑 Login de ${NETWORK_META[target.slice("login:".length)]?.label || target.slice("login:".length)}`
         : targetLabels[target] || target;
-      showToast(`🚀 Abriendo ${label} para ${channel?.nombre}`);
+      const auto = data.autoLogin ? " — auto-login 🔑" : "";
+      showToast(`🚀 Abriendo ${label}${auto} para ${channel?.nombre}`);
       await refreshSystem();
       await loadProfiles();
     } else {
@@ -786,6 +804,77 @@ window.launchChannel = async function (id, target, buttonEl) {
   } finally {
     buttonEl.disabled = false;
     buttonEl.innerHTML = originalText;
+  }
+};
+
+// ===================== CLAVES DE AUTO-LOGIN (🔑) =====================
+
+// Abrir el modal de claves de un canal
+window.openCredsModal = async function (id) {
+  const profile = allProfiles.find((p) => p.id === id);
+  if (!profile) return;
+  credsTargetId = id;
+  credsTitle.textContent = `🔑 Claves de auto-login · ${profile.nombre}`;
+  modalCreds.classList.remove("hidden");
+  await renderCreds();
+};
+
+// Pintar una fila por red con usuario/clave (la clave nunca viaja de vuelta al panel)
+async function renderCreds() {
+  let data = {};
+  try {
+    const res = await fetch(`/api/profiles/${credsTargetId}/credenciales`);
+    data = await res.json();
+  } catch {}
+
+  credsList.innerHTML = REDES_CLAVES.map((red) => {
+    const c = data[red] || {};
+    const meta = NETWORK_META[red];
+    const nota = red === "youtube" ? '<span class="cred-nota">Si se deja vacía se usa la clave de Google.</span>' : "";
+    const borrar = c.tieneClave || c.usuario
+      ? `<button class="cred-del" onclick="deleteCred('${red}')" title="Borrar la clave guardada de ${meta.label}">🗑</button>`
+      : "";
+    return `
+      <div class="cred-row">
+        <div class="cred-red">${meta.icon} ${meta.label} ${c.tieneClave ? '<span class="cred-ok" title="Clave guardada: el login de esta red será automático">✓</span>' : ""} ${borrar}</div>
+        <input type="text" id="cred-user-${red}" placeholder="Usuario / email / teléfono" value="${escapeHtml(c.usuario || "")}" autocomplete="off">
+        <input type="password" id="cred-pass-${red}" placeholder="${c.tieneClave ? "•••••••• guardada — deja vacío para conservar" : "Contraseña"}" autocomplete="new-password">
+        ${nota}
+      </div>
+    `;
+  }).join("") + '<p class="cred-nota-qr">WhatsApp y Telegram se vinculan con código QR: no usan usuario/clave.</p>';
+}
+
+// Guardar las claves rellenadas (clave vacía = conservar la ya guardada)
+window.saveCreds = async function () {
+  if (!credsTargetId) return;
+  let guardadas = 0;
+  for (const red of REDES_CLAVES) {
+    const usuario = document.getElementById(`cred-user-${red}`)?.value.trim() || "";
+    const clave = document.getElementById(`cred-pass-${red}`)?.value || "";
+    if (!usuario && !clave) continue;
+    try {
+      const res = await fetch(`/api/profiles/${credsTargetId}/credenciales`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ red, usuario, clave }),
+      });
+      if ((await res.json()).ok) guardadas += 1;
+    } catch {}
+  }
+  showToast(`🔐 Claves listas: ${guardadas} red(es) harán login automático`);
+  await renderCreds();
+};
+
+// Borrar la clave de una red concreta
+window.deleteCred = async function (red) {
+  if (!credsTargetId || !red) return;
+  try {
+    await fetch(`/api/profiles/${credsTargetId}/credenciales/${red}`, { method: "DELETE" });
+    showToast(`🗑️ Clave de ${NETWORK_META[red]?.label || red} borrada`);
+    await renderCreds();
+  } catch (err) {
+    alert("Error borrando la clave: " + err.message);
   }
 };
 

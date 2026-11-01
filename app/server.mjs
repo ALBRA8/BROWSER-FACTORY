@@ -12,7 +12,7 @@ import crypto from "node:crypto";
 import { spawn, execFile } from "node:child_process";
 import { fileURLToPath } from "node:url";
 
-const VERSION = "1.1.0";
+const VERSION = "1.2.0";
 const PORT = Number(process.env.PUERTO || process.env.PORT || 3300);
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const DATA_DIR = path.join(__dirname, "..", "data");
@@ -20,6 +20,9 @@ const SESIONES_DIR = path.join(DATA_DIR, "sesiones");
 const THUMBS_DIR = path.join(DATA_DIR, "thumbs");
 const PROFILES_FILE = path.join(DATA_DIR, "perfiles.json");
 const PROXIES_FILE = path.join(DATA_DIR, "proxies.json");
+// Credenciales de auto-login por canal. NUNCA se suben al repositorio
+// ni se devuelven en claro al navegador: solo rellenan el formulario.
+const CRED_FILE = path.join(DATA_DIR, "credenciales.json");
 const CONFIG_FILE = path.join(DATA_DIR, "config.json");
 
 // Tamaño máximo permitido para el cuerpo de peticiones (protección contra abuso local)
@@ -241,6 +244,21 @@ function saveProxies(proxies) {
   fs.writeFileSync(PROXIES_FILE, JSON.stringify(proxies, null, 2), "utf8");
 }
 
+// Credenciales de auto-login por canal: { "<perfilId>": { "<red>": { usuario, clave } } }
+// Archivo local en data/credenciales.json (excluido del repositorio por .gitignore).
+// La API NUNCA devuelve las claves: solo usuario + indicador tieneClave.
+function getCredenciales() {
+  try {
+    return JSON.parse(fs.readFileSync(CRED_FILE, "utf8"));
+  } catch {
+    return {};
+  }
+}
+
+function saveCredenciales(data) {
+  fs.writeFileSync(CRED_FILE, JSON.stringify(data, null, 2), "utf8");
+}
+
 function normalizeRedes(input) {
   const base = { facebook: false, instagram: false, whatsapp: false, tiktok: false, youtube: false, google: false, x: false, telegram: false };
   if (!input || typeof input !== "object") {
@@ -353,6 +371,149 @@ function setupProxyExtension(profileDir, proxyConfig) {
 
   fs.writeFileSync(path.join(extDir, "manifest.json"), JSON.stringify(manifest, null, 2));
   fs.writeFileSync(path.join(extDir, "background.js"), backgroundJs);
+  return extDir;
+}
+
+// Genera una extensión temporal (Manifest V3) de AUTO-LOGIN para un canal.
+// Cuando Chrome abre una página de inicio de sesión de una red con claves
+// guardadas, content.js rellena usuario/clave y envía el formulario solito.
+// Devuelve la ruta de la extensión, o null si el canal no tiene claves usables.
+function setupAutoLoginExtension(profileDataDir, credenciales) {
+  const map = {};
+  for (const red of ["facebook", "instagram", "tiktok", "google", "x"]) {
+    const c = credenciales?.[red];
+    if (c && c.usuario && c.clave) map[red] = { usuario: c.usuario, clave: c.clave };
+  }
+  // YouTube se accede con la cuenta de Google: reutiliza sus claves si no tiene propias
+  const cy = credenciales?.youtube;
+  if (cy && cy.usuario && cy.clave) map.youtube = { usuario: cy.usuario, clave: cy.clave };
+  else if (map.google) map.youtube = { usuario: map.google.usuario, clave: map.google.clave };
+  if (Object.keys(map).length === 0) return null;
+
+  const extDir = path.join(profileDataDir, "auto_login_ext");
+  if (!fs.existsSync(extDir)) fs.mkdirSync(extDir, { recursive: true });
+
+  const manifest = {
+    manifest_version: 3,
+    name: "Browser Factory Auto Login",
+    version: "1.2.0",
+    description: "Rellena localmente los formularios de inicio de sesion de las redes del canal.",
+    permissions: ["scripting"],
+    host_permissions: ["<all_urls>"],
+    background: { service_worker: "background.js" },
+  };
+
+  const backgroundJs = [
+    "// Service worker: inyecta content.js en las paginas de login conocidas",
+    "const LOGIN_HOSTS = /facebook\\.com|instagram\\.com|accounts\\.google\\.com|tiktok\\.com|x\\.com|twitter\\.com/;",
+    "chrome.tabs.onUpdated.addListener((tabId, info, tab) => {",
+    "  if (info.status !== \"complete\" || !tab || !tab.url) return;",
+    "  if (!LOGIN_HOSTS.test(tab.url)) return;",
+    "  chrome.scripting.executeScript({ target: { tabId }, files: [\"content.js\"] }).catch(() => {});",
+    "});",
+  ].join("\n");
+
+  const contentJs = `// Relleno de formularios de login (solo redes con claves de este canal)
+(function () {
+  const BF_CRED = __BF_CREDENCIALES__;
+  function redDeHost(h) {
+    if (h.includes("facebook.com")) return "facebook";
+    if (h.includes("instagram.com")) return "instagram";
+    if (h.includes("accounts.google.com")) return "google";
+    if (h.includes("tiktok.com")) return "tiktok";
+    if (h.includes("x.com") || h.includes("twitter.com")) return "x";
+    return null;
+  }
+  const red = redDeHost(location.hostname);
+  if (!red || !BF_CRED[red] || !BF_CRED[red].clave) return;
+  const cred = BF_CRED[red];
+  const MAX = 3;
+  function intentos() { try { return Number(sessionStorage.getItem("bf:" + red) || 0); } catch { return 0; } }
+  function sumaIntento() { try { sessionStorage.setItem("bf:" + red, String(intentos() + 1)); } catch {} }
+  function visible(el) { return !!(el && (el.offsetWidth || el.offsetHeight || el.getClientRects().length)); }
+  function setVal(input, val) {
+    const desc = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value");
+    desc.set.call(input, val);
+    input.dispatchEvent(new Event("input", { bubbles: true }));
+    input.dispatchEvent(new Event("change", { bubbles: true }));
+  }
+  function campoTexto() {
+    const sels = ['input[autocomplete="username"]', "#identifierId", 'input[type="email"]', 'input[name="username"]', 'input[type="tel"]', 'input[type="text"]'];
+    for (const s of sels) {
+      for (const el of document.querySelectorAll(s)) {
+        if (visible(el) && !el.value && !el.disabled && !el.readOnly) return el;
+      }
+    }
+    return null;
+  }
+  function campoPass() {
+    for (const el of document.querySelectorAll('input[type="password"]')) {
+      if (visible(el) && !el.value && !el.disabled) return el;
+    }
+    return null;
+  }
+  function botonTexto(rx) {
+    for (const b of document.querySelectorAll('button, div[role="button"], input[type="submit"]')) {
+      if (visible(b) && rx.test((b.textContent || b.value || "").trim())) return b;
+    }
+    return null;
+  }
+  function enviar() {
+    const especial = document.querySelector("#identifierNext button, #passwordNext button");
+    if (especial && visible(especial)) { especial.click(); return true; }
+    const submit = document.querySelector('button[type="submit"], input[type="submit"]');
+    if (submit && visible(submit)) { submit.click(); return true; }
+    const txt = botonTexto(/(log.?in|iniciar sesi|siguiente|next|entrar|acceder)/i);
+    if (txt) { txt.click(); return true; }
+    return false;
+  }
+  let usuarioListo = false;
+  function paso() {
+    if (intentos() >= MAX) return false;
+    const pass = campoPass();
+    const user = campoTexto();
+    if (user && pass) {
+      setVal(user, cred.usuario);
+      setVal(pass, cred.clave);
+      sumaIntento();
+      setTimeout(() => {
+        if (!enviar()) {
+          const f = pass.closest("form");
+          if (f) f.submit();
+        }
+      }, 600);
+      return true;
+    }
+    if (pass && usuarioListo) {
+      setVal(pass, cred.clave);
+      sumaIntento();
+      setTimeout(() => enviar(), 600);
+      return true;
+    }
+    const soloUsuario = user && !pass && (user.id === "identifierId" || user.autocomplete === "username");
+    if (soloUsuario) {
+      setVal(user, cred.usuario);
+      usuarioListo = true;
+      sumaIntento();
+      setTimeout(() => enviar(), 500);
+      return true;
+    }
+    return false;
+  }
+  let corridas = 0;
+  const t = setInterval(() => {
+    corridas++;
+    try {
+      if (paso() || corridas >= 20) clearInterval(t);
+    } catch {
+      clearInterval(t);
+    }
+  }, 1500);
+})();
+`;
+  fs.writeFileSync(path.join(extDir, "manifest.json"), JSON.stringify(manifest, null, 2));
+  fs.writeFileSync(path.join(extDir, "background.js"), backgroundJs);
+  fs.writeFileSync(path.join(extDir, "content.js"), contentJs.replace("__BF_CREDENCIALES__", JSON.stringify(map)));
   return extDir;
 }
 
@@ -785,6 +946,72 @@ const server = http.createServer(async (req, res) => {
       return;
     }
 
+    // CREDENCIALES DE AUTO-LOGIN (🔑) POR CANAL
+    // GET devuelve solo usuario + tieneClave (NUNCA la clave en claro)
+    const credMatch = pathname.match(/^\/api\/profiles\/([^/]+)\/credenciales$/);
+    if (credMatch && req.method === "GET") {
+      const id = decodeURIComponent(credMatch[1]);
+      if (!isSafeProfileId(id)) {
+        sendJson(res, 400, { error: "ID de perfil inválido" });
+        return;
+      }
+      const todas = getCredenciales()[id] || {};
+      const credSafe = {};
+      for (const [red, c] of Object.entries(todas)) {
+        credSafe[red] = { usuario: c.usuario || "", tieneClave: Boolean(c.clave) };
+      }
+      sendJson(res, 200, credSafe);
+      return;
+    }
+
+    if (credMatch && req.method === "POST") {
+      const id = decodeURIComponent(credMatch[1]);
+      if (!isSafeProfileId(id)) {
+        sendJson(res, 400, { error: "ID de perfil inválido" });
+        return;
+      }
+      const body = JSON.parse((await readBody(req)) || "{}");
+      const red = String(body.red || "");
+      if (!REDES.includes(red)) {
+        sendJson(res, 400, { error: "Red inválida" });
+        return;
+      }
+      const todas = getCredenciales();
+      const actual = todas[id] || {};
+      const previa = actual[red] || {};
+      const usuario = String(body.usuario || "").trim();
+      // Clave vacía = conservar la ya guardada (permite actualizar solo el usuario)
+      const clave = String(body.clave || "") || previa.clave || "";
+      if (!usuario && !clave) {
+        delete actual[red];
+      } else {
+        actual[red] = { usuario, clave };
+      }
+      if (Object.keys(actual).length === 0) delete todas[id];
+      else todas[id] = actual;
+      saveCredenciales(todas);
+      sendJson(res, 200, { ok: true, tieneClave: Boolean(todas[id]?.[red]?.clave) });
+      return;
+    }
+
+    const credDelMatch = pathname.match(/^\/api\/profiles\/([^/]+)\/credenciales\/([^/]+)$/);
+    if (credDelMatch && req.method === "DELETE") {
+      const id = decodeURIComponent(credDelMatch[1]);
+      const red = decodeURIComponent(credDelMatch[2]);
+      if (!isSafeProfileId(id) || !REDES.includes(red)) {
+        sendJson(res, 400, { error: "Parámetros inválidos" });
+        return;
+      }
+      const todas = getCredenciales();
+      if (todas[id]) {
+        delete todas[id][red];
+        if (Object.keys(todas[id]).length === 0) delete todas[id];
+        saveCredenciales(todas);
+      }
+      sendJson(res, 200, { ok: true });
+      return;
+    }
+
     if (pathname.startsWith("/api/profiles/") && req.method === "DELETE") {
       const id = pathname.replace("/api/profiles/", "");
       closeProfileSessions(id);
@@ -941,15 +1168,28 @@ const server = http.createServer(async (req, res) => {
         proxyConfig = proxies.find((pr) => pr.id === profile.proxyId);
       }
 
+      // Extensiones temporales del canal (se combinan en UN solo --load-extension)
+      const extPaths = [];
       if (proxyConfig && proxyConfig.host) {
         if (proxyConfig.user && proxyConfig.pass) {
           // Inyectar extensión de proxy con credenciales automáticas
-          const extPath = setupProxyExtension(profileDataDir, proxyConfig);
-          chromeArgs.push(`--load-extension=${extPath}`);
+          extPaths.push(setupProxyExtension(profileDataDir, proxyConfig));
         } else {
           // Proxy directo por IP sin autenticación
           chromeArgs.push(`--proxy-server=${proxyConfig.protocolo || "http"}://${proxyConfig.host}:${proxyConfig.port}`);
         }
+      }
+
+      // Auto-login (🔑): si el canal tiene claves guardadas, la extensión temporal
+      // rellena y envía los formularios de inicio de sesión sin intervención.
+      let autoLoginActivo = false;
+      const autoLoginExt = setupAutoLoginExtension(profileDataDir, getCredenciales()[id] || {});
+      if (autoLoginExt) {
+        extPaths.push(autoLoginExt);
+        autoLoginActivo = true;
+      }
+      if (extPaths.length > 0) {
+        chromeArgs.push(`--load-extension=${extPaths.join(",")}`);
       }
 
       for (const targetUrl of targetUrls) {
@@ -973,6 +1213,7 @@ const server = http.createServer(async (req, res) => {
           target,
           urlsAbiertas: targetUrls.length,
           proxyUsado: proxyConfig ? proxyConfig.nombre : "Directo",
+          autoLogin: autoLoginActivo,
         });
       } catch (err) {
         sendJson(res, 500, { error: `Error lanzando el navegador: ${err.message}` });

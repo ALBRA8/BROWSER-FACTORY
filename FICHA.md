@@ -1,8 +1,8 @@
-# Ficha: Browser Factory v1.1
+# Ficha: Browser Factory v1.2
 
 > Inspirada en: Dolphin Anty (solo como referencia de interfaz de perfiles de navegador; no se copia nada de código ni recursos)
 > Autor: Johan & Antigravity · Fecha: Octubre 2026
-> Estado: **Versión 1.1 implementada**
+> Estado: **Versión 1.2 implementada**
 
 Esta ficha es la especificación de la herramienta **Browser Factory** y refleja el producto en su primera versión oficial.
 
@@ -20,7 +20,7 @@ Para creadores de contenido y administradores de múltiples canales que necesita
 
 ---
 
-## 3. Funciones de la versión 1.1
+## 3. Funciones de la versión 1.2
 
 | # | Función | Qué hace | Cómo se hace técnicamente |
 |---|---------|----------|---------------------------|
@@ -28,6 +28,7 @@ Para creadores de contenido y administradores de múltiples canales que necesita
 | 2 | **Redes sociales por canal** | Cada canal activa/desactiva TikTok, YouTube, Google (Gmail), Instagram, Facebook, WhatsApp, X y Telegram. | Campo `redes` en el perfil; el panel y "Abrir Todo" respetan la configuración. |
 | 3 | **Lanzador aislado en 1 clic** | Botón por red social que abre el navegador con la sesión de ese canal guardada permanentemente. | Lanza Chrome/Edge/Brave con `--user-data-dir="data/sesiones/<id>"`. |
 | 3b | **Login individual por red (🔑)** | Botón 🔑 junto a cada red: abre SOLO la página de inicio de sesión de esa red, sin abrir el resto. | Target `login:<red>` validado contra `REDES`; usa `LOGIN_URLS[red]` y respeta las redes activadas del canal. |
+| 3c | **Auto-login con claves guardadas (🤖)** | Guarda usuario/clave por red y canal; al pulsar Login el navegador rellena y envía los formularios solo. | `data/credenciales.json` (git-ignored); API GET/POST/DELETE `/api/profiles/<id>/credenciales` que nunca devuelve claves; extensión Chrome MV3 temporal (`setupAutoLoginExtension`) con content script que rellena los formularios (Facebook/Instagram/TikTok/X/Google, máx. 3 intentos). |
 | 4 | **Modo Celular** | Abre el canal como si fuera un smartphone Android vertical. | `--user-agent` móvil de Pixel 8 + ventana 412x915 + eventos táctiles. |
 | 5 | **Selector de videos con miniaturas** | Escanea la carpeta de videos del usuario y asigna el video de cada canal desde una galería con miniatura, tamaño y fecha. | `GET /api/videos` escanea la carpeta de `data/config.json`; miniaturas con ffmpeg (opcional) cacheadas en `data/thumbs/`. |
 | 6 | **Explorador nativo de Windows** | Elegir carpeta o archivo con el diálogo real de Windows. | Endpoint `POST /api/file-dialog` que usa PowerShell + WinForms (FolderBrowserDialog / OpenFileDialog). |
@@ -89,6 +90,6 @@ Para creadores de contenido y administradores de múltiples canales que necesita
 ## 8. Identidad propia
 
 - **Nombre:** Browser Factory
-- **Versión:** 1.1 (login individual por red 🔑 + acceso Google/Gmail)
+- **Versión:** 1.2 (auto-login con claves guardadas 🤖 + login individual 🔑 + Google/Gmail)
 - **Estilo:** Modo oscuro elegante (grises oscuros `#121316`, acentos violeta/azul `#6366f1` y verde neón `#10b981`).
 - **Idioma:** Español.

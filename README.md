@@ -34,9 +34,20 @@ Cada canal guarda sus sesiones en una carpeta propia de Chrome aislada, así que
 
 > Si una sesión se dessynchroniza (p. ej. cambió la contraseña o el proxy), pulsa el **`🔑`** de esa red o **`🔐 Login`** del canal y refresca la sesión.
 
+### 🤖 Auto-login: que el panel entre solo
+
+En el botón de **credenciales** de cada canal (columna Acciones) guarda el usuario y la clave de cada red.
+A partir de ese momento, cada vez que pulses **`🔐 Login`** o el **`🔑`** de una red, el navegador abre la página
+de inicio de sesión, **rellena el usuario y la clave automáticamente y envía el formulario** — solo tendrás que
+resolver el 2FA/captcha si tu cuenta lo pide. Las claves viajan solo entre el panel y tu Chrome local:
+- Se guardan solo en tu PC, en `data/credenciales.json` (excluido del repositorio por `.gitignore`).
+- La API **nunca** devuelve la clave al navegador (solo un indicador "clave guardada").
+- La extensión que rellena los formularios se genera temporalmente por canal y se destruye al cerrar la sesión.
+- YouTube comparte la clave de Google; WhatsApp y Telegram se vinculan por QR (no usan clave).
+
 ---
 
-## 🧩 Funciones de la versión 1.1
+## 🧩 Funciones de la versión 1.2
 
 | # | Función | Qué hace |
 |---|---------|----------|
@@ -50,7 +61,8 @@ Cada canal guarda sus sesiones en una carpeta propia de Chrome aislada, así que
 | 8 | **Sesiones activas en vivo** | El panel muestra una insignia verde "Activo" en los canales con navegador abierto y permite cerrarlos desde el panel. |
 | 9 | **Proxies con auto-login** | Guarda proxies en formato Dolphin Anty (`http://ip:puerto:usuario:clave:nombre`) y los aplica por canal, con extensión temporal que inyecta las credenciales sin alertas. |
 | 10 | **Login individual por red (🔑)** | Junto a cada red del canal hay un botón 🔑 que abre solo la página de inicio de sesión de esa red, sin abrir el resto — ideal para refrescar una única sesión. |
-| 11 | **Seguridad local reforzada** | Bloqueo de path traversal, límite de 1 MB por petición, validación de IDs, cabeceras `nosniff` y CSP, sin CORS hacia webs externas. |
+| 11 | **Auto-login con claves guardadas (🤖)** | Guarda usuario y clave de cada red por canal (`data/credenciales.json`, local y fuera del repo). Al pulsar Login, una extensión temporal de Chrome rellena y envía los formularios solo. La API jamás devuelve las claves al navegador. |
+| 12 | **Seguridad local reforzada** | Bloqueo de path traversal, límite de 1 MB por petición, validación de IDs, cabeceras `nosniff` y CSP, sin CORS hacia webs externas. |
 
 ---
 
